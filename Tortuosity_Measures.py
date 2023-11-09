@@ -17,10 +17,9 @@ class TortuosityMeasures:
 
         
         Theta = np.rad2deg(np.arctan2(diff_y, diff_x))
-        alpha = np.diff(Theta)        
-        alpha = np.insert(alpha, 0, Theta[0])
+        alpha = np.diff(Theta)                
 
-        trouble_idx = np.where(alpha >= 180 | alpha <= -180)
+        trouble_idx = np.where(np.logical_or(alpha >= 180, alpha <= -180))
         trouble_values = alpha[trouble_idx]
         alpha[trouble_idx] = np.mod(trouble_values, np.sign(trouble_values) * (-360))
         alpha = alpha / 180
