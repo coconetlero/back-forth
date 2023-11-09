@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 from Tortuosity_Measures import TortuosityMeasures
 from numpy import genfromtxt, diff
 
-# matplotlib.use('Qt5Agg')        # for windows OS
-matplotlib.use('MacOSX')
+
+matplotlib.use('Qt5Agg')
 
 # # calculate scc on a csv file
 # data = genfromtxt('C:/Users/zian/Projects/SCC-Trees/src_py/bb.csv', delimiter=',')
@@ -27,13 +27,13 @@ matplotlib.use('MacOSX')
 # -----------------------------------------------------------------
 
 def plot_segment(X, Y):
-    plt.plot(X, Y, 'r.-')
+    plt.plot(X, Y, 'r.-', linewidth=1, markersize=2)
     plt.axis('equal')
+    plt.show()
 
 
-if __name__ == '__main__':
-    ## parsing the file and crete branche
-
+## read a test tree and calculate SCC and tortuosity
+def test_branches():
     lines = []
     with open('/Users/zianfanti/IIMAS/Three_Representation/data/test/test_branch.txt') as file:
         lines = file.readlines()
@@ -89,3 +89,27 @@ if __name__ == '__main__':
     result_file.close()
 
     plt.show()
+
+
+def test_circle(r):
+    x = 0
+    y = 0
+
+    P = 2 * np.pi * r
+    th = np.linspace(0, 2 * np.pi, 360)
+
+    Xa = r * np.cos(th) + x
+    Ya = r * np.sin(th) + y
+
+    np.append(Xa, Xa[1])
+    np.append(Ya, Ya[1])
+
+    [SCC, alpha_f] = TortuosityMeasures.scc(Xa, Ya)
+    print("SCC = {}".format(SCC))
+
+
+    plot_segment(Xa, Ya)
+
+
+if __name__ == '__main__':
+    test_circle(1)
