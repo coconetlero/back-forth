@@ -5,7 +5,8 @@ import numpy as np
 
 class TortuosityMeasures:
 
-    def scc(x_vec, y_vec):
+    
+    def SCC(x_vec, y_vec):
         """
         Computes the Tortousity of a curve given by x_vec, y_vec with the Slope Chain Code method
         :param x_vec: numpy array X coordinates of the curve
@@ -27,3 +28,40 @@ class TortuosityMeasures:
         SCC = np.sum(np.absolute(alpha))
 
         return [SCC, alpha]
+    
+    
+    def SCC_Tree(scc_tree):
+        """
+        """
+        slope_change = [2, 1, get_slope_diff(None, scc_tree[2], scc_tree[3])]
+        last = scc_tree[2]
+        current = scc_tree[3]
+
+        for k in range(4, len(scc_tree) - 1):
+            next = scc_tree[k]
+            if type(next) is not tuple:
+                if next != 1:
+                    pass
+            else:
+                alpha = get_slope_diff(last, current, next)
+                slope_change.append(alpha)
+
+                last = current
+                current = next
+
+
+    def get_slope_diff(p0, p1, p2):
+        ""
+        if p0 is None:
+            Theta = np.rad2deg(np.arctan2(np.diff([p1[0], p2[0]]), np.diff([p1[1], p2[1]])))
+            alpha = Theta[0]
+        else:    
+            dx = np.diff([p0[1], p1[1], p2[1]])
+            dy = np.diff([p0[0], p1[0], p2[0]]) 
+            Theta = np.rad2deg(np.arctan2(dy, dx))
+            alpha = np.diff(Theta)[0]
+
+            if np.logical_or(alpha >= 180, alpha <= -180):
+                alpha = np.mod(alpha, np.sign(alpha) * (-360))
+        
+        return alpha / 180
