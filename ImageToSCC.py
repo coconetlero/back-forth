@@ -13,6 +13,8 @@ import ezdxf
 from ezdxf.addons.drawing import RenderContext, Frontend
 from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
 
+from Tortuosity_Measures import TortuosityMeasures as tort
+
 
 
 # matplotlib.use('MacOSX')
@@ -70,7 +72,7 @@ def tree_traversal(image, root, max_distance):
 
 
 def build_tree(_image, root):
-    image = np.array(o_image)
+    image = np.array(_image)
     cp = root  # moving Position
     p_idx = 0
     p_vec = ((0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0), (1, 1))
@@ -172,7 +174,7 @@ def build_interpolated_tree(tree_path):
 
 def build_scc_tree(interp_tree):
     tree_dist = [2, 1, math.dist(interp_tree[2], interp_tree[3])]
-    tree_scc = [2, 1, get_slope_change(interp_tree[2], interp_tree[2], interp_tree[3])]
+    tree_scc = [2, 1, get_slope_change(None, interp_tree[2], interp_tree[3])]
     last = interp_tree[2]
     current = interp_tree[3]
 
@@ -527,16 +529,19 @@ def get_slope_change(p0, p1, p2):
     :param p1: first point (from)
     :param p2: second point (to)
     """
-    dx = np.diff([p0[1], p1[1], p2[1]])
-    dy = np.diff([p0[0], p1[0], p2[0]]) * -1
-    Theta = np.rad2deg(np.arctan2(dy, dx))
-    alpha = np.diff(Theta)[0] / 180
+    if p0 is None:
+        Theta = np.rad2deg(np.arctan2(np.diff([p1[0], p2[0]]), np.diff([p1[1], p2[1]])))
+        alpha = Theta[0]
+    else:    
+        dx = np.diff([p0[1], p1[1], p2[1]])
+        dy = np.diff([p0[0], p1[0], p2[0]]) 
+        Theta = np.rad2deg(np.arctan2(dy, dx))
+        alpha = np.diff(Theta)[0]
 
-    if alpha > 1:
-        alpha = (2 - alpha) * -1
-    if alpha < -1:
-        alpha = 2 - (alpha * -1)
-    return alpha
+        if np.logical_or(alpha >= 180, alpha <= -180):
+            alpha = np.mod(alpha, np.sign(alpha) * (-360))
+    
+    return alpha / 180
 
 
 def interp_curve(n, px, py):
@@ -735,6 +740,7 @@ def plot_tree(scc_tree, dist_tree):
         k += 1
 
     plt.plot(X, Y, 'r.-')
+    plt.axis('equal')
     plt.show()
 
     return [X, Y]
@@ -801,6 +807,8 @@ if __name__ == '__main__':
     treepath = build_tree(o_image, sp)
     interp_tree = build_interpolated_tree(treepath)
     [scc, dist] = build_scc_tree(interp_tree)
+
+    # tort.SCC(scc)
 
     display_tree(scc, dist)
     [X, Y] = plot_tree(scc, dist)
