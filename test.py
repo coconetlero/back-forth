@@ -1,9 +1,12 @@
 import codecs
-
-import numpy as np
+import cv2
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import yaml
 
+
+import ImageToSCC as imscc
 from Tortuosity_Measures import TortuosityMeasures
 from numpy import genfromtxt, diff
 
@@ -111,5 +114,24 @@ def test_circle(r):
     plot_segment(Xa, Ya)
 
 
+
+
+
+def test_branch():
+    with open('./config.yaml', 'r') as file:
+        config_data = yaml.safe_load(file)
+
+    sp = (config_data["start_position"]["x"],config_data["start_position"]["y"])
+    o_image = cv2.imread(config_data["base_folder"] + config_data["binary_image"], cv2.IMREAD_GRAYSCALE)
+    o_file = config_data["base_folder"] + config_data["output_file"]
+    d_file = config_data["base_folder"] + config_data["distances_file"]
+
+    treepath = imscc.build_tree(o_image, sp)
+    interp_tree = imscc.build_interpolated_tree(treepath)
+
+    [scc, dist] = TortuosityMeasures.SCC_Tree(interp_tree)
+
+
 if __name__ == '__main__':
-    test_circle(1)
+    # test_circle(1)
+    test_branch()
