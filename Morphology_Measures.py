@@ -6,7 +6,7 @@ from Tortuosity_Measures import TortuosityMeasures
 class Morphology_Measures:
 
     @staticmethod
-    def three_branch_anlge(scc_tree):
+    def tree_branch_anlge(scc_tree):
         """
         """
         assert len(scc_tree) > 3, "The length of the input must be contain at least 4 elements."        
@@ -40,8 +40,8 @@ class Morphology_Measures:
 
             idx += 1
                 
-        mean_angle = np.mean(angles[0:-1])
-        return mean_angle
+        median_angle = np.median(angles[0:-1])
+        return [median_angle, angles]
     
 
     def angle_between(b1, b2):

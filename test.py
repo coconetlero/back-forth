@@ -137,19 +137,28 @@ def test_branch():
     interp_tree = imscc.build_interpolated_tree(treepath)
 
     tort = TortuosityMeasures.SCC_Tree(interp_tree)
-    angle = morph.three_branch_anlge(interp_tree)
+    angle = morph.tree_branch_anlge(interp_tree)
 
     print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
 
 
 def test_all():
+    ###
+    # 
+    # ###
+
+    # type_tree = "norm_trees"
+    # folder = "norm_folder"
+    type_tree = "hyper_trees"
+    folder = "hyper_folder"
+
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
-    hyper_trees = config_data["hyper_trees"]        
-    for tree in hyper_trees:
-        image_path = config_data["hyper_folder"] + tree["binary_image"]        
+    trees = config_data[type_tree]        
+    for tree in trees:
+        image_path = config_data[folder] + tree["binary_image"]        
         assert os.path.isfile(image_path), "The image {} doesn't exixt".format(tree["binary_image"])
 
         o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -161,9 +170,9 @@ def test_all():
             interp_tree = imscc.build_interpolated_tree(treepath)
 
             tort = TortuosityMeasures.SCC_Tree(interp_tree)
-            angle = morph.three_branch_anlge(interp_tree)
+            [m_angle, angles] = morph.tree_branch_anlge(interp_tree)
 
-            print("{} - Tort = {} - Angle = {}".format(tree["binary_image"], tort, angle))
+            print("{} - Tort = {} - Angle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
     
 

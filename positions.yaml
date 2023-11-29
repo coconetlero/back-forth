@@ -148,3 +148,156 @@ hyper_trees:
           y: 203
 
 
+norm_trees: 
+  - binary_image: Norm1_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 371
+          y: 83 
+  - binary_image: Norm1_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 360
+          y: 70    
+      - position:
+          x: 386
+          y: 95
+  - binary_image: Norm2_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 318
+          y: 166 
+  - binary_image: Norm2_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 317
+          y: 134  
+  - binary_image: Norm3_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 393
+          y: 141 
+      - position:
+          x: 367
+          y: 163 
+      - position:
+          x: 366
+          y: 222  
+  - binary_image: Norm3_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 381
+          y: 154
+      - position:
+          x: 362
+          y: 212  
+  - binary_image: Norm4_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 330
+          y: 89  
+  - binary_image: Norm4_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 321
+          y: 105   
+  - binary_image: Norm5_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 270
+          y: 62 
+  - binary_image: Norm5_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 257
+          y: 46  
+  - binary_image: Norm6_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 318
+          y: 137
+      - position:
+          x: 315
+          y: 171 
+  - binary_image: Norm6_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 335
+          y: 115
+      - position:
+          x: 314
+          y: 152  
+  - binary_image: Norm7_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 356
+          y: 72 
+  - binary_image: Norm7_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 341
+          y: 63
+      - position:
+          x: 352
+          y: 94  
+  - binary_image: Norm8_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 369
+          y: 123 
+  - binary_image: Norm8_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 387
+          y: 134  
+  - binary_image: Norm9_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 326
+          y: 102 
+      - position:
+          x: 320
+          y: 130
+  - binary_image: Norm9_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 312
+          y: 125  
+  - binary_image: Norm10_A_sk2.tif
+    type: artery    
+    start_position:
+      - position:
+          x: 337
+          y: 89
+      - position:
+          x: 382
+          y: 136 
+  - binary_image: Norm10_V_sk2.tif
+    type: vein   
+    start_position: 
+      - position:
+          x: 338
+          y: 75    
+      - position:
+          x: 352
+          y: 92
+
+    
