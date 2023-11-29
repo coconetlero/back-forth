@@ -593,7 +593,7 @@ def interp_curve(n, px, py):
         pt[-1] = np.array([px[-1], py[-1]])
         return pt
     else:
-        return np.array((px[0], py[0]), (px[-1], py[-1]))
+        return np.array([(px[0], py[0]),(px[-1], py[-1])])
 
 
 def show_plot(doc) -> None:
