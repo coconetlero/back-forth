@@ -40,7 +40,7 @@ class Morphology_Measures:
 
             idx += 1
                 
-        median_angle = np.median(angles[0:-1])
+        median_angle = np.median(angles)
         return [median_angle, angles]
     
 
