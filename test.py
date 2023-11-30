@@ -135,12 +135,15 @@ def test_branch():
 
     treepath = imscc.build_tree(o_image, sp)
     interp_tree = imscc.build_interpolated_tree(treepath)
+    [scc, dist] = imscc.build_scc_tree(interp_tree)
 
-    tort = TortuosityMeasures.SCC_Tree(interp_tree)
-    angle = morph.tree_branch_anlge(interp_tree)
+    # [X, Y] = imscc.plot_tree(scc, dist)
 
-    print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
-    print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
+    # tort = TortuosityMeasures.SCC_Tree(scc)
+    [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
+
+    # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
+    # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
 
 
 def test_all():
@@ -148,10 +151,10 @@ def test_all():
     # 
     # ###
 
-    # type_tree = "norm_trees"
-    # folder = "norm_folder"
-    type_tree = "hyper_trees"
-    folder = "hyper_folder"
+    type_tree = "norm_trees"
+    folder = "norm_folder"
+    # type_tree = "hyper_trees"
+    # folder = "hyper_folder"
 
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
@@ -172,7 +175,7 @@ def test_all():
             tort = TortuosityMeasures.SCC_Tree(interp_tree)
             [m_angle, angles] = morph.tree_branch_anlge(interp_tree)
 
-            print("{} - Tort = {} - Angle = {}".format(tree["binary_image"], tort, m_angle))
+            print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
     
 
@@ -183,5 +186,5 @@ def test_all():
 
 if __name__ == '__main__':
     # test_circle(1)
-    # test_branch()
-    test_all()
+    test_branch()
+    # test_all()

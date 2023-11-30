@@ -306,7 +306,7 @@ def build_full_parentheses_tree(interp_tree):
         """
     p1 = 2
     p2 = 0
-    max_p = p1
+    max_p = p1 
 
     last = interp_tree[2]
     current = interp_tree[2]

@@ -24,9 +24,7 @@ class Morphology_Measures:
 
         # find angles 
         angles = []        
-        bifurcations = set()
-        b1 = tuple()
-        b2 = tuple()
+        bifurcations = set()       
         idx = 0
         for v in vertexes:
             if v in bifurcations:
@@ -52,3 +50,79 @@ class Morphology_Measures:
         Theta = np.rad2deg(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
         return Theta
+    
+    @staticmethod
+    def tree_scc_branch_anlge(scc_tree):
+        """
+        Finds the bifurcation angle based only on the slope of the chain code of the given tree
+        
+        Returns:
+            median_angle: double
+                The median of the all bifurcation angles found in the given tree
+            anlges: list 
+                A list with all the bifurcation angles found in the given tree
+        """
+        assert len(scc_tree) > 3, "The length of the input must be contain at least 4 elements."        
+
+        sum_angle = 0
+        scc_branch = {}
+        vertexes = []  
+        current_branch = []    
+        p1 = None
+        p2 = None
+
+        # find coordinates from bifurcations and ending points 
+        for k in range(2, len(scc_tree) - 1):
+            next = scc_tree[k]            
+            if next >= 1:     
+                if next == 1: 
+                    p1 = None
+                    current_branch = []
+                    sum_angle += 1
+                    continue          
+                vertexes.append(next)
+                if not p1:
+                    p1 = next
+                else:
+                    p2 = next
+
+                if p1 and p2:
+                    scc_branch[(p1,p2)] = current_branch
+                    current_branch = []
+                    p1 = p2
+                    p2 = None
+            else:
+                sum_angle += next
+                sum_angle %= 2
+                sa = sum_angle * 180  
+
+                if np.logical_or(sa >= 180, sa <= -180):
+                    sa = np.mod(sa, np.sign(sa) * (-360))                 
+                
+                if p1: 
+                    current_branch.append(sum_angle)
+
+        # find angles 
+        angles = []        
+        bifurcations = set()
+        idx = 0
+        for v in vertexes:
+            if v in bifurcations:
+                bifurcations.remove(v)
+                b1 = (v, vertexes[idx - 1])
+                b2 = (v, vertexes[idx + 1])
+                v1 = np.average(np.array(scc_branch[b1]) * 180)
+                v2 = np.average(np.array(scc_branch[b2]) * 180)
+                
+                if np.logical_or(v1 >= 180, v1 <= -180): v1 = np.mod(v1, np.sign(v1) * (-360))
+                if np.logical_or(v2 >= 180, v2 <= -180): v2 = np.mod(v2, np.sign(v2) * (-360))
+                
+                theta = np.mod(v1 - v2, 180)  
+                angles.append(theta)
+            else:
+                bifurcations.add(v)
+
+            idx += 1
+                
+        median_angle = np.median(angles)
+        return [median_angle, angles]
