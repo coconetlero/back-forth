@@ -6,17 +6,17 @@ from Tortuosity_Measures import TortuosityMeasures
 class Morphology_Measures:
 
     @staticmethod
-    def tree_branch_anlge(scc_tree):
+    def tree_branch_anlge(interp_tree):
         """
         """
-        assert len(scc_tree) > 3, "The length of the input must be contain at least 4 elements."        
+        assert len(interp_tree) > 3, "The length of the input must be contain at least 4 elements."        
         coordinates = {}
         vertexes = []
         # find coordinates from bifurcations and ending points 
-        for k in range(4, len(scc_tree) - 1):
-            next = scc_tree[k]
+        for k in range(4, len(interp_tree) - 1):
+            next = interp_tree[k]
             if type(next) is not tuple:     
-                current = scc_tree[k - 1]
+                current = interp_tree[k - 1]
                 if next == 1: continue
                 if not coordinates.get(next):
                     coordinates[next] = current              
@@ -51,6 +51,7 @@ class Morphology_Measures:
 
         return Theta
     
+
     @staticmethod
     def tree_scc_branch_anlge(scc_tree):
         """
@@ -94,10 +95,6 @@ class Morphology_Measures:
             else:
                 sum_angle += next
                 sum_angle %= 2
-                sa = sum_angle * 180  
-
-                if np.logical_or(sa >= 180, sa <= -180):
-                    sa = np.mod(sa, np.sign(sa) * (-360))                 
                 
                 if p1: 
                     current_branch.append(sum_angle)
@@ -126,3 +123,78 @@ class Morphology_Measures:
                 
         median_angle = np.median(angles)
         return [median_angle, angles]
+    
+
+    @staticmethod
+    def tree_length(interp_tree):
+
+        assert len(interp_tree) > 3, "The length of the input must be contain at least 4 elements."                
+        length = 0
+        p1 = interp_tree[2]
+        # traverse the whole tree     
+        for k in range(3, len(interp_tree) - 1):
+            next = interp_tree[k]
+            if type(next) is tuple:     
+                if next != 1: 
+                    p2 = next
+                    length += math.dist(p1,p2)
+                    p1 = p2 
+                    p2 = None
+
+        length /= 2
+        return length    
+    
+
+    @staticmethod
+    def tree_branch_length(interp_tree):
+
+        assert len(interp_tree) > 3, "The length of the input must be contain at least 4 elements."  
+        length = 0
+        lengths = []
+        p1 = interp_tree[2]
+        ini = 2
+        end = 0
+        # traverse the whole tree     
+        for k in range(3, len(interp_tree) - 1):            
+            current = interp_tree[k]
+            if type(current) is tuple:                     
+                p2 = current
+                length += math.dist(p1,p2)
+                p1 = p2 
+                p2 = None
+            else:
+                if current == 1: continue
+                end = current
+                if end > ini:
+                    lengths.append(length)    
+                length = 0
+                ini = end               
+
+        mean_length = np.average(lengths)
+        return [mean_length, lengths]
+    
+
+    @staticmethod
+    def tree_scc_count_features(scc_tree):
+        assert len(scc_tree) > 3, "The length of the input must be contain at least 4 elements." 
+
+        vertexes = [] 
+        # find coordinates from bifurcations and ending points 
+        for k in range(2, len(scc_tree) - 1):
+            current = scc_tree[k]
+            next = scc_tree[k + 1]
+            if current >= 1:                     
+                vertexes.append(current)
+ 
+        terminals = 1
+        for v in vertexes:            
+            if v == 1: 
+                terminals += 1
+
+        verts = np.max(vertexes) - 1
+
+        segments = verts - 1
+        bifurcations = verts - terminals
+
+        return [segments, bifurcations, terminals]
+                

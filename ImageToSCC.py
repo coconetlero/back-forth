@@ -183,9 +183,12 @@ def build_scc_tree(interp_tree):
         if type(next) is not tuple:
             if next != 1:
                 tree_scc.append(next)
-                tree_dist.append(next)
+                tree_dist.append(next)            
         else:
-            alpha = get_slope_change(last, current, next)
+            if last == next: 
+                alpha = 1
+            else:
+                alpha = get_slope_change(last, current, next)
             dist = math.dist(current, next)
             tree_scc.append(alpha)
             tree_dist.append(dist)

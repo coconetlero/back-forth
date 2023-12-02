@@ -4,11 +4,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
+import pandas as pd
 import yaml
+
 import ImageToSCC as imscc
 
 from Tortuosity_Measures import TortuosityMeasures
-from Morphology_Measures import Morphology_Measures as morph
+from Morphology_Measures import Morphology_Measures
 from numpy import genfromtxt, diff
 
 
@@ -140,7 +142,11 @@ def test_branch():
     # [X, Y] = imscc.plot_tree(scc, dist)
 
     # tort = TortuosityMeasures.SCC_Tree(scc)
-    [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
+    # [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
+    [segments, bifurcations, terminals] = Morphology_Measures.tree_scc_count_features(scc)
+
+    lengths = Morphology_Measures.tree_branch_length(interp_tree)
+
 
     # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
@@ -150,15 +156,28 @@ def test_all():
     ###
     # 
     # ###
-
-    type_tree = "norm_trees"
-    folder = "norm_folder"
-    # type_tree = "hyper_trees"
-    # folder = "hyper_folder"
-
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
+    # type_tree = "norm_trees"
+    # folder = "norm_folder"
+    # result_file = "n_csv_output"
+    
+    type_tree = "hyper_trees"
+    folder = "hyper_folder"
+    result_file = "h_csv_output"
+
+
+    names_1 = []
+    names_2 = []
+    tort = []
+    angles = []
+    length = []
+    segments = []
+    bifurcations = []
+    terminals = []
+    p_length = []
+    
     trees = config_data[type_tree]        
     for tree in trees:
         image_path = config_data[folder] + tree["binary_image"]        
@@ -171,12 +190,37 @@ def test_all():
 
             treepath = imscc.build_tree(o_image, sp)
             interp_tree = imscc.build_interpolated_tree(treepath)
+            [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
-            tort = TortuosityMeasures.SCC_Tree(interp_tree)
-            [m_angle, angles] = morph.tree_branch_anlge(interp_tree)
 
-            print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
+            T = TortuosityMeasures.SCC_Tree(interp_tree)            
+            L = Morphology_Measures.tree_length(interp_tree)
+            [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
+            [m_lengths, length] = Morphology_Measures.tree_branch_length(interp_tree)
+            [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+
+            names_1.append(tree["binary_image"])
+            tort.append(T)
+            length.append(L)
+            segments.append(seg)
+            bifurcations.append(bifur)
+            terminals.append(term)
+            p_length.append(m_lengths)
+
+            names_2 += [tree["binary_image"]] * len(t_angles)
+            angles += t_angles
+
+            # print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
+            
+    tp1 = list(zip(names_1, tort, length, p_length, segments, bifurcations, terminals))
+    tp2 = list(zip(names_2, angles)) 
+
+    df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 'Terminals'])
+    df2 = pd.DataFrame(tp2, columns=['Image Name', 'Angles'])
+
+    df1.to_csv(config_data[result_file], mode='a')
+    df2.to_csv(config_data[result_file], mode='a')
     
 
     
@@ -186,5 +230,5 @@ def test_all():
 
 if __name__ == '__main__':
     # test_circle(1)
-    test_branch()
-    # test_all()
+    # test_branch()
+    test_all()
