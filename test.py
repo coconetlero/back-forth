@@ -159,24 +159,24 @@ def test_all():
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
-    # type_tree = "norm_trees"
-    # folder = "norm_folder"
-    # result_file = "n_csv_output"
+    type_tree = "norm_trees"
+    folder = "norm_folder"
+    result_file = "n_csv_output"
     
-    type_tree = "hyper_trees"
-    folder = "hyper_folder"
-    result_file = "h_csv_output"
+    # type_tree = "hyper_trees"
+    # folder = "hyper_folder"
+    # result_file = "h_csv_output"
 
 
     names_1 = []
     names_2 = []
     tort = []
     angles = []
-    length = []
+    lengths = []
     segments = []
     bifurcations = []
     terminals = []
-    p_length = []
+    p_lengths = []
     
     trees = config_data[type_tree]        
     for tree in trees:
@@ -196,16 +196,16 @@ def test_all():
             T = TortuosityMeasures.SCC_Tree(interp_tree)            
             L = Morphology_Measures.tree_length(interp_tree)
             [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
-            [m_lengths, length] = Morphology_Measures.tree_branch_length(interp_tree)
             [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+            [m_length, all_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
 
             names_1.append(tree["binary_image"])
             tort.append(T)
-            length.append(L)
+            lengths.append(L)
             segments.append(seg)
             bifurcations.append(bifur)
             terminals.append(term)
-            p_length.append(m_lengths)
+            p_lengths.append(m_length)
 
             names_2 += [tree["binary_image"]] * len(t_angles)
             angles += t_angles
@@ -213,7 +213,7 @@ def test_all():
             # print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
             
-    tp1 = list(zip(names_1, tort, length, p_length, segments, bifurcations, terminals))
+    tp1 = list(zip(names_1, tort, lengths, p_lengths, segments, bifurcations, terminals))
     tp2 = list(zip(names_2, angles)) 
 
     df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 'Terminals'])
