@@ -143,10 +143,9 @@ def test_branch():
 
     # tort = TortuosityMeasures.SCC_Tree(scc)
     # [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
-    [segments, bifurcations, terminals] = Morphology_Measures.tree_scc_count_features(scc)
-
-    lengths = Morphology_Measures.tree_branch_length(interp_tree)
-
+    # [segments, bifurcations, terminals] = Morphology_Measures.tree_scc_count_features(scc)
+    # lengths = Morphology_Measures.tree_branch_length(interp_tree)
+    [mt, at, t] = TortuosityMeasures.DM_Tree(interp_tree)
 
     # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
@@ -177,6 +176,7 @@ def test_all():
     bifurcations = []
     terminals = []
     p_lengths = []
+    dm_stl = []
     
     trees = config_data[type_tree]        
     for tree in trees:
@@ -193,7 +193,8 @@ def test_all():
             [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
 
-            T = TortuosityMeasures.SCC_Tree(interp_tree)            
+            T = TortuosityMeasures.SCC_Tree(interp_tree)      
+            [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
             L = Morphology_Measures.tree_length(interp_tree)
             [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
             [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
@@ -206,6 +207,7 @@ def test_all():
             bifurcations.append(bifur)
             terminals.append(term)
             p_lengths.append(m_length)
+            dm_stl.append(dm_m)
 
             names_2 += [tree["binary_image"]] * len(t_angles)
             angles += t_angles
@@ -213,10 +215,10 @@ def test_all():
             # print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
             
-    tp1 = list(zip(names_1, tort, lengths, p_lengths, segments, bifurcations, terminals))
+    tp1 = list(zip(names_1, tort, lengths, p_lengths, segments, bifurcations, terminals, dm_stl))
     tp2 = list(zip(names_2, angles)) 
 
-    df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 'Terminals'])
+    df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 'Terminals', 'DM Tort'])
     df2 = pd.DataFrame(tp2, columns=['Image Name', 'Angles'])
 
     df1.to_csv(config_data[result_file], mode='a')

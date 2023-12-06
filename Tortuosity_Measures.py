@@ -71,3 +71,37 @@ class TortuosityMeasures:
         return alpha / 180
 
 
+    def DM_Tree(interp_tree):
+        
+        assert len(interp_tree) > 3, "The length of the input must be contain at least 4 elements."  
+        
+        tort = []
+        p1 = interp_tree[2]
+        p_i = p1 
+        ini = 2
+        end = 0        
+        d_c = 0
+        
+        # traverse the whole tree             
+        for k in range(3, len(interp_tree)):
+            current = interp_tree[k]
+            if type(current) is tuple:                     
+                p_j = current
+                d_c += math.dist(p_i, p_j)
+                p_i = p_j 
+                p_j = None
+            else:
+                if current == 1: continue
+                end = current   
+                p2 = p_i                
+                if end > ini:                    
+                    d_x = math.dist(p1, p2)
+                    tort.append((d_c / d_x) - 1)        
+                    
+                d_c = 0      
+                p1 = p2          
+                ini = end               
+
+        mean_tort = np.average(tort)
+        sum_tort = np.sum(tort)
+        return [mean_tort, sum_tort, tort]
