@@ -169,13 +169,15 @@ def test_all():
 
     names_1 = []
     names_2 = []
+    names_3 = []
     tort = []
     angles = []
     lengths = []
     segments = []
     bifurcations = []
     terminals = []
-    p_lengths = []
+    branch_length = []
+    all_branch_lengths = []
     dm_stl = []
     
     trees = config_data[type_tree]        
@@ -198,7 +200,7 @@ def test_all():
             L = Morphology_Measures.tree_length(interp_tree)
             [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
             [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
-            [m_length, all_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
+            [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
 
             names_1.append(tree["binary_image"])
             tort.append(T)
@@ -206,23 +208,30 @@ def test_all():
             segments.append(seg)
             bifurcations.append(bifur)
             terminals.append(term)
-            p_lengths.append(m_length)
-            dm_stl.append(dm_m)
+            branch_length.append(branch_mean_length)
+            dm_stl.append(dm_st)
 
             names_2 += [tree["binary_image"]] * len(t_angles)
             angles += t_angles
 
+            names_3 += [tree["binary_image"]] * len(branch_lengths)
+            all_branch_lengths += branch_lengths
+
+
             # print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
             
-    tp1 = list(zip(names_1, tort, lengths, p_lengths, segments, bifurcations, terminals, dm_stl))
+    tp1 = list(zip(names_1, tort, lengths, branch_length, segments, bifurcations, terminals, dm_stl))
     tp2 = list(zip(names_2, angles)) 
+    tp3 = list(zip(names_3, all_branch_lengths)) 
 
     df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 'Terminals', 'DM Tort'])
     df2 = pd.DataFrame(tp2, columns=['Image Name', 'Angles'])
+    df3 = pd.DataFrame(tp3, columns=['Image Name', 'Branch Length'])
 
     df1.to_csv(config_data[result_file], mode='a')
     df2.to_csv(config_data[result_file], mode='a')
+    df3.to_csv(config_data[result_file], mode='a')
     
 
     

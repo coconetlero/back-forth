@@ -171,7 +171,8 @@ class Morphology_Measures:
                 ini = end               
 
         mean_length = np.average(lengths)
-        return [mean_length, lengths]
+        sum_length = np.sum(lengths)
+        return [mean_length, sum_length, lengths]
     
 
     @staticmethod
