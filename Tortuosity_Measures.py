@@ -38,6 +38,7 @@ class TortuosityMeasures:
                 acc += current
                         
         tortuosity = acc / 2
+        return tortuosity
 
 
     def SCC_Tree_1(interp_tree):
