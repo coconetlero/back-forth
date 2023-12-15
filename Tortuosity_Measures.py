@@ -31,14 +31,30 @@ class TortuosityMeasures:
     
 
     def SCC_Tree(scc_tree):
-        """
-        """
-        slope_change = [TortuosityMeasures.get_slope_diff(None, scc_tree[2], scc_tree[3])]
-        last = scc_tree[2]
-        current = scc_tree[3]
+        acc = 0
+        for k in range(2, len(scc_tree)):
+            current = scc_tree[k]
+            if current < 1:
+                acc += current
+                        
+        tortuosity = acc / 2
 
-        for k in range(4, len(scc_tree) - 1):
-            next = scc_tree[k]
+
+    def SCC_Tree_1(interp_tree):
+        """ Obtains the tortuosity of a tree representad by its (x,y) positions
+
+        Args:
+            interp_tree (_type_): a tree where each vertex is represented by its (x,y) positon
+
+        Returns:
+            _type_: the tortuosity value for all the tree
+        """
+        slope_change = [TortuosityMeasures.get_slope_diff(None, interp_tree[2], interp_tree[3])]
+        last = interp_tree[2]
+        current = interp_tree[3]
+
+        for k in range(4, len(interp_tree) - 1):
+            next = interp_tree[k]
             if type(next) is not tuple:
                 if next == 1:
                     slope_change.append(1)
@@ -49,7 +65,7 @@ class TortuosityMeasures:
                 last = current
                 current = next
 
-        tortuosity = (np.sum(np.absolute(slope_change)) - 2) / 2
+        tortuosity = np.sum(np.absolute(slope_change)) / 2
         return tortuosity
     
  
