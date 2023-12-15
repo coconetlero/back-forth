@@ -198,4 +198,9 @@ class Morphology_Measures:
         bifurcations = verts - terminals
 
         return [segments, bifurcations, terminals]
+    
+
+    @staticmethod
+    def tree_scc_circularity(scc_tree):
+        pass
                 
