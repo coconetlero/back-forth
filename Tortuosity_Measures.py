@@ -49,7 +49,7 @@ class TortuosityMeasures:
                 last = current
                 current = next
 
-        tortuosity = np.sum(np.absolute(slope_change)) / 2
+        tortuosity = (np.sum(np.absolute(slope_change)) - 2) / 2
         return tortuosity
     
  
@@ -97,7 +97,7 @@ class TortuosityMeasures:
                 if end > ini:                    
                     d_x = math.dist(p1, p2)
                     tort.append((d_c / d_x) - 1)        
-                    
+
                 d_c = 0      
                 p1 = p2          
                 ini = end               
