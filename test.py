@@ -158,13 +158,13 @@ def test_all():
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
-    type_tree = "norm_trees"
-    folder = "norm_folder"
-    result_file = "n_csv_output"
+    # type_tree = "norm_trees"
+    # folder = "norm_folder"
+    # result_file = "n_csv_output"
     
-    # type_tree = "hyper_trees"
-    # folder = "hyper_folder"
-    # result_file = "h_csv_output"
+    type_tree = "hyper_trees"
+    folder = "hyper_folder"
+    result_file = "h_csv_output"
 
 
     names_1 = []
@@ -195,7 +195,7 @@ def test_all():
             [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
 
-            T = TortuosityMeasures.SCC_Tree(interp_tree)      
+            [T, T_n] = TortuosityMeasures.SCC_Tree(scc_tree)      
             [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
             L = Morphology_Measures.tree_length(interp_tree)
             [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)

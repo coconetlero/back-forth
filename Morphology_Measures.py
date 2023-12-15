@@ -204,3 +204,19 @@ class Morphology_Measures:
     def tree_scc_circularity(scc_tree):
         pass
                 
+
+    @staticmethod
+    def conves_concav(scc_tree):
+        acc = 0
+        abs_acc = 0
+
+        for k in range(2, len(scc_tree)):
+            current = scc_tree[k]
+            if current < 1:
+                acc += current
+                abs_acc += abs(current)
+                        
+        tortuosity = acc / 2
+        tort_norm = (2 * tortuosity) / abs_acc
+
+        return [tortuosity, tort_norm]

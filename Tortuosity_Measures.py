@@ -32,13 +32,18 @@ class TortuosityMeasures:
 
     def SCC_Tree(scc_tree):
         acc = 0
+        count = 0
+
         for k in range(2, len(scc_tree)):
             current = scc_tree[k]
             if current < 1:
-                acc += current
+                acc += abs(current)
+                count += 1
                         
         tortuosity = acc / 2
-        return tortuosity
+        tort_norm = (2 * tortuosity) / count
+
+        return [tortuosity, tort_norm]
 
 
     def SCC_Tree_1(interp_tree):
