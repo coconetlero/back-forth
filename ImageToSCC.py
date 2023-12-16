@@ -544,7 +544,11 @@ def get_slope_change(p0, p1, p2):
         if np.logical_or(alpha >= 180, alpha <= -180):
             alpha = np.mod(alpha, np.sign(alpha) * (-360))
     
-    return alpha / 180
+    alpha_n = alpha / 180
+    if abs(alpha_n) < 1e-14:
+        alpha_n = 0
+
+    return alpha_n 
 
 
 def interp_curve(n, px, py):

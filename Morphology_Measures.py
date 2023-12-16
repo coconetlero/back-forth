@@ -202,8 +202,37 @@ class Morphology_Measures:
 
     @staticmethod
     def tree_scc_circularity(scc_tree):
-        pass
-                
+        # # Obtain the mean of the tree
+        # acc = 0
+        # n = 0
+        # for k in range(1, len(scc_tree)):
+        #     current = scc_tree[k]
+        #     if current <= 1:
+        #         acc += current
+        #         n += 1
+        
+        # C_m = acc / n
+        # D_c = 0
+        # for k in range(2, len(scc_tree)):
+        #     current = scc_tree[k]
+        #     if current <= 1:
+        #         D_c += abs(current - C_m)
+        
+        # return D_c
+        acc_l = []
+        n = 0
+        for k in range(2, len(scc_tree)):
+            current = scc_tree[k-1]
+            next = scc_tree[k]
+            if current > 1 and next != 1:                
+                acc_l.append(next)
+            elif current == 1:
+                acc_l.append(current)
+            else:
+                n += 1
+        acc = np.sum(acc_l)
+        C_m = acc_l / n
+
 
     @staticmethod
     def conves_concav(scc_tree):

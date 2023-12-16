@@ -117,7 +117,23 @@ def test_circle(r):
     plot_segment(Xa, Ya)
 
 
+def test_paper():
 
+    scc_tree = [2, 1, 0, 0, 0, 0, 3, -.3, 0, -.1, 0, 4, 1, 0, .1, 0, 3, -.6, 0, 0, 5, -.2, -.3, 6, 1, 
+                .3, 5, -.7, .2, 7, 1, -.2, 5, -.1, 0, 0, 3, -.8, 0, 0, .3, 8, 1, -.3, 0, 0, 3, -.3, 0, 0, 0, 0]
+    dist = [2, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 3, 1, 1, 1, 5, 1, 1, 6, 1, 
+            1, 5, 1, 1, 7, 1, 1, 5, 1, 1, 1, 3, 1, 1, 1, 1, 8, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1]
+    
+    # scc_tree = [2, 1, 0, 0, 0, 3, -.3, 0, -.1, 0, 4, 1, 0, .1, 0, 3, -.6, 0, 0, 5, -.2, -.3, 6, 1, 
+    #             .3, 5, -.7, .2, 7, 1, -.2, 5, -.1, 0, 0, 3, -.1, 0, 0, 0]
+    # dist = [2, 1, 1, 1, 1, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 3, 1, 1, 1, 5, 1, 1, 6, 1, 
+    #             1, 5, 1, 1, 7, 1, 1, 5, 1, 1, 1, 3, 1, 1, 1, 1]
+    
+    scc_tree = [2, 1, 0, 3, -0.34, 0, 4, 1, 0, 3, -0.48, 0, 5, 1, 0, 3, -0.18, 0]
+    dist = [2, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1]
+    
+    [X, Y] = imscc.plot_tree(scc_tree, dist)
+    non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
 
 
 def test_branch():
@@ -137,15 +153,16 @@ def test_branch():
 
     treepath = imscc.build_tree(o_image, sp)
     interp_tree = imscc.build_interpolated_tree(treepath)
-    [scc, dist] = imscc.build_scc_tree(interp_tree)
+    [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
-    # [X, Y] = imscc.plot_tree(scc, dist)
+    [X, Y] = imscc.plot_tree(scc_tree, dist)
 
     # tort = TortuosityMeasures.SCC_Tree(scc)
     # [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
     # [segments, bifurcations, terminals] = Morphology_Measures.tree_scc_count_features(scc)
     # lengths = Morphology_Measures.tree_branch_length(interp_tree)
-    [mt, at, t] = TortuosityMeasures.DM_Tree(interp_tree)
+    non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
+    # [mt, at, t] = TortuosityMeasures.DM_Tree(interp_tree)
 
     # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
@@ -158,13 +175,13 @@ def test_all():
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
-    # type_tree = "norm_trees"
-    # folder = "norm_folder"
-    # result_file = "n_csv_output"
+    type_tree = "norm_trees"
+    folder = "norm_folder"
+    result_file = "n_csv_output"
     
-    type_tree = "hyper_trees"
-    folder = "hyper_folder"
-    result_file = "h_csv_output"
+    # type_tree = "hyper_trees"
+    # folder = "hyper_folder"
+    # result_file = "h_csv_output"
 
 
     names_1 = []
@@ -242,4 +259,5 @@ def test_all():
 if __name__ == '__main__':
     # test_circle(1)
     # test_branch()
-    test_all()
+    # test_all()
+    test_paper()
