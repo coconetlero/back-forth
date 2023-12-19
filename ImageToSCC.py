@@ -533,13 +533,12 @@ def get_slope_change(p0, p1, p2):
     :param p2: second point (to)
     """
     if p0 is None:
-        Theta = np.rad2deg(np.arctan2(np.diff([p1[0], p2[0]]), np.diff([p1[1], p2[1]])))
-        alpha = Theta[0]
+        alpha = np.rad2deg(np.arctan2(p2[0] - p1[0], p2[1] - p1[1]))
     else:    
         dx = np.diff([p0[1], p1[1], p2[1]])
         dy = np.diff([p0[0], p1[0], p2[0]]) 
         Theta = np.rad2deg(np.arctan2(dy, dx))
-        alpha = np.diff(Theta)[0]
+        alpha = Theta[0] - Theta[1]
 
         if np.logical_or(alpha >= 180, alpha <= -180):
             alpha = np.mod(alpha, np.sign(alpha) * (-360))
