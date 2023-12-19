@@ -213,14 +213,14 @@ class Morphology_Measures:
 
         return T_c
     
-    
+
     @staticmethod
     def tree_scc_linearity(scc_tree):
         T_l = 0
         for k in range(1, len(scc_tree)):
             current = scc_tree[k]
             if current <= 1:     
-               D_c = abs(current)
+               T_l = abs(current)
 
         return T_l
     

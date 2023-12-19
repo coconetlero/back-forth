@@ -180,9 +180,9 @@ def test_all():
     folder = "norm_folder"
     result_file = "n_csv_output"
     
-    # type_tree = "hyper_trees"
-    # folder = "hyper_folder"
-    # result_file = "h_csv_output"
+    type_tree = "hyper_trees"
+    folder = "hyper_folder"
+    result_file = "h_csv_output"
 
 
     names_1 = []
@@ -225,7 +225,7 @@ def test_all():
             T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
 
             names_1.append(tree["binary_image"])
-            tort.append(T)
+            tort.append(T_n)
             lengths.append(L)
             segments.append(seg)
             bifurcations.append(bifur)
