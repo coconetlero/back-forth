@@ -196,6 +196,9 @@ def build_scc_tree(interp_tree):
             last = current
             current = next
 
+    tree_scc.append(-tree_scc[2])
+    tree_dist.append(tree_dist[2])
+    
     return [tree_scc, tree_dist]
 
 
