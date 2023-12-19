@@ -1,7 +1,7 @@
 import yaml
 
 # update with your local configuration
-base_folder = "/Users/zianfanti/IIMAS/Three_Representation/data/db_Elena/ArbolesNorm/"
+base_folder = "/Users/Zian/Trabajo/IIMAS/SCC-Trees/data/db_Elena/ArbolesNorm/"
 scc_folder = base_folder + "SSC/"
 data = {
     "base_folder": base_folder,
