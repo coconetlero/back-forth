@@ -129,7 +129,7 @@ def test_paper():
     # dist = [2, 1, 1, 1, 1, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 3, 1, 1, 1, 5, 1, 1, 6, 1, 
     #             1, 5, 1, 1, 7, 1, 1, 5, 1, 1, 1, 3, 1, 1, 1, 1]
     
-    scc_tree = [2, 1, 0, 3, -0.34, 0, 4, 1, 0, 3, -0.48, 0, 5, 1, 0, 3, -0.18, 0]
+    scc_tree = [2, 1, 0, 3, 0.34, 0, 4, 1, 0, 3, 0.48, 0, 5, 1, 0, 3, 0.18, 0]
     dist = [2, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1]
     
     [X, Y] = imscc.plot_tree(scc_tree, dist)
@@ -155,6 +155,7 @@ def test_branch():
     interp_tree = imscc.build_interpolated_tree(treepath)
     [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
+    imscc.display_tree(scc_tree, dist)
     [X, Y] = imscc.plot_tree(scc_tree, dist)
 
     # tort = TortuosityMeasures.SCC_Tree(scc)
@@ -196,6 +197,8 @@ def test_all():
     branch_length = []
     all_branch_lengths = []
     dm_stl = []
+    circularity = []
+    linearity = []
     
     trees = config_data[type_tree]        
     for tree in trees:
@@ -218,6 +221,8 @@ def test_all():
             [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
             [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
             [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
+            T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
+            T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
 
             names_1.append(tree["binary_image"])
             tort.append(T)
@@ -227,6 +232,8 @@ def test_all():
             terminals.append(term)
             branch_length.append(branch_mean_length)
             dm_stl.append(dm_st)
+            circularity.append(T_c)
+            linearity.append(T_l)
 
             names_2 += [tree["binary_image"]] * len(t_angles)
             angles += t_angles
@@ -238,11 +245,12 @@ def test_all():
             # print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
             
-    tp1 = list(zip(names_1, tort, lengths, branch_length, segments, bifurcations, terminals, dm_stl))
+    tp1 = list(zip(names_1, tort, lengths, branch_length, segments, bifurcations, terminals, dm_stl, circularity, linearity))
     tp2 = list(zip(names_2, angles)) 
     tp3 = list(zip(names_3, all_branch_lengths)) 
 
-    df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 'Terminals', 'DM Tort'])
+    df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 
+                                     'Terminals', 'DM Tort', 'Circularity', 'Linearity'])
     df2 = pd.DataFrame(tp2, columns=['Image Name', 'Angles'])
     df3 = pd.DataFrame(tp3, columns=['Image Name', 'Branch Length'])
 
@@ -258,6 +266,7 @@ def test_all():
 
 if __name__ == '__main__':
     # test_circle(1)
+    # test_paper()
     # test_branch()
-    # test_all()
-    test_paper()
+    test_all()
+    
