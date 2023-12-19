@@ -1,7 +1,7 @@
-hyper_folder: /Users/zianfanti/IIMAS/Three_Representation/data/db_Elena/ArbolesHyper/
-norm_folder: /Users/zianfanti/IIMAS/Three_Representation/data/db_Elena/ArbolesNorm/
-h_csv_output: /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/hyper_results.csv
-n_csv_output: /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/norm_results.csv
+hyper_folder: /Users/Zian/Trabajo/IIMAS/SCC-Trees/data/db_Elena/ArbolesHyper/
+norm_folder: /Users/Zian/Trabajo/IIMAS/SCC-Trees/data/db_Elena/ArbolesNorm/
+h_csv_output: /Users/Zian/Trabajo/IIMAS/SCC-Trees/results/db_Elena/hyper_results.csv
+n_csv_output: /Users/Zian/Trabajo/IIMAS/SCC-Trees/results/db_Elena/norm_results.csv
 
 hyper_trees: 
   - binary_image: Hyper1_A_sk2.tif
