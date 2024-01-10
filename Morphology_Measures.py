@@ -209,20 +209,50 @@ class Morphology_Measures:
         for k in range(1, len(scc_tree)):
             current = scc_tree[k]
             if current <= 1:     
-               T_c = abs(current - C_m)
+               T_c += abs(current - C_m)
 
         return T_c
+
+
+    @staticmethod
+    def curve_scc_circularity(scc_curve):
+        acc = 0
+        n = 0
+        for slope in scc_curve:            
+            acc += slope
+            n += 1        
+
+        A_m = acc / n        
+
+        # obtain the circularity        
+        A_c = 0
+        for slope in scc_curve:  
+            A_c += abs(slope - A_m)
+
+        return A_c
     
 
     @staticmethod
-    def tree_scc_linearity(scc_tree):
+    def tree_scc_linearity(scc_tree):        
+        [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+
         T_l = 0
+        b = {}
         for k in range(1, len(scc_tree)):
             current = scc_tree[k]
-            if current <= 1:     
-               T_l = abs(current)
+            if current < 1:     
+                T_l += abs(current)
+            elif current > 1:
+                if b.get(current):
+                    b[current].append(scc_tree[k + 1])
+                else:
+                    b[current] = [scc_tree[k + 1]]
 
-        return T_l
+        acc_bif = 0
+        for key in b:
+            acc_bif += -sum(b[key])
+
+        return (T_l / 2) - acc_bif
     
 
     @staticmethod

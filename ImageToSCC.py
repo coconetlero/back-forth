@@ -789,6 +789,20 @@ def write_scc_file(scc_filename, dist_filename, ssc_tree, dist_tree):
     dist_file.close()
 
 
+def create_scc_closed_curve(dx, dy):
+    scc_curve = []
+    last = [dy[0],dx[0]]
+    current = [dy[1],dx[1]]
+    for k in range(2, len(dx)):        
+        next = [dy[k],dx[k]]
+        slope_d = get_slope_change(last, current, next)
+        scc_curve.append(slope_d)
+
+        last = current
+        current = next
+    return scc_curve 
+
+
 if __name__ == '__main__':
 
 

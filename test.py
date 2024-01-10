@@ -102,18 +102,22 @@ def test_circle(r):
     y = 0
 
     P = 2 * np.pi * r
-    th = np.linspace(0, 2 * np.pi, 360)
+    th = np.linspace(0, 2 * np.pi, 90)
 
     Xa = r * np.cos(th) + x
     Ya = r * np.sin(th) + y
 
-    np.append(Xa, Xa[1])
-    np.append(Ya, Ya[1])
+    Xa = np.append(Xa, Xa[1])
+    Ya = np.append(Ya, Ya[1])
 
-    [SCC, alpha_f] = TortuosityMeasures.scc(Xa, Ya)
+    [SCC, alpha_f] = TortuosityMeasures.SCC(Xa, Ya)    
+    
+    scc_curve = imscc.create_scc_closed_curve(Xa, Ya)
+
+    non_circ = Morphology_Measures.curve_scc_circularity(scc_curve)
+
     print("SCC = {}".format(SCC))
-
-
+    print("Circ = {}".format(non_circ))
     plot_segment(Xa, Ya)
 
 
@@ -129,8 +133,11 @@ def test_paper():
     # dist = [2, 1, 1, 1, 1, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 3, 1, 1, 1, 5, 1, 1, 6, 1, 
     #             1, 5, 1, 1, 7, 1, 1, 5, 1, 1, 1, 3, 1, 1, 1, 1]
     
-    scc_tree = [2, 1, 0, 3, 0.34, 0, 4, 1, 0, 3, 0.48, 0, 5, 1, 0, 3, 0.18, 0]
-    dist = [2, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1]
+    # scc_tree = [2, 1, 0, 3, 0.34, 0, 4, 1, 0, 3, 0.48, 0, 5, 1, 0, 3, 0.18, 0]
+    # dist = [2, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1]
+
+    scc_tree = [2, 1, 0, 0, 3, -0.75, 0, 4, 1, 0, 3, 0.25, 0, 5, 1, 0, 3, -0.5, 0, 0]
+    dist = [2, 1, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1, 1]
     
     [X, Y] = imscc.plot_tree(scc_tree, dist)
     non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
@@ -155,15 +162,16 @@ def test_branch():
     interp_tree = imscc.build_interpolated_tree(treepath)
     [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
-    imscc.display_tree(scc_tree, dist)
+    # imscc.display_tree(scc_tree, dist)
     [X, Y] = imscc.plot_tree(scc_tree, dist)
 
     # tort = TortuosityMeasures.SCC_Tree(scc)
     # [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
     # [segments, bifurcations, terminals] = Morphology_Measures.tree_scc_count_features(scc)
     # lengths = Morphology_Measures.tree_branch_length(interp_tree)
-    non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
+    # non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
     # [mt, at, t] = TortuosityMeasures.DM_Tree(interp_tree)
+    T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
 
     # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
@@ -176,9 +184,9 @@ def test_all():
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
-    type_tree = "norm_trees"
-    folder = "norm_folder"
-    result_file = "n_csv_output"
+    # type_tree = "norm_trees"
+    # folder = "norm_folder"
+    # result_file = "n_csv_output"
     
     type_tree = "hyper_trees"
     folder = "hyper_folder"
