@@ -268,17 +268,30 @@ class Morphology_Measures:
     
 
     @staticmethod
-    def conves_concav(scc_tree):
+    def convex_concav(scc_tree):
         acc = 0
-        abs_acc = 0
-
+        slope_acc = 0
+        
         for k in range(2, len(scc_tree)):
             current = scc_tree[k]
             if current < 1:
+                slope_acc += abs(current)
                 acc += current
-                abs_acc += abs(current)
                         
-        tortuosity = acc / 2
-        tort_norm = (2 * tortuosity) / abs_acc
+        t = slope_acc / 2
+        acc /= 2
+        C_m = t - abs(acc)
+        C = None      
+          
+        if abs(acc) == t:
+            C = 1
+        elif abs(acc) < t:
+            C = -1
+        else:
+            C = 0
 
-        return [tortuosity, tort_norm]
+        
+        return [C, C_m]
+
+
+    
