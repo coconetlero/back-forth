@@ -136,11 +136,12 @@ def test_paper():
     # scc_tree = [2, 1, 0, 3, 0.34, 0, 4, 1, 0, 3, 0.48, 0, 5, 1, 0, 3, 0.18, 0]
     # dist = [2, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1]
 
-    scc_tree = [2, 1, 0, 0, 3, -0.75, 0, 4, 1, 0, 3, 0.25, 0, 5, 1, 0, 3, -0.5, 0, 0]
-    dist = [2, 1, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1, 1]
+    # scc_tree = [2, 1, 0, 0, 3, -0.75, 0, 4, 1, 0, 3, 0.25, 0, 5, 1, 0, 3, -0.5, 0, 0]
+    # dist = [2, 1, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1, 1]
     
     [X, Y] = imscc.plot_tree(scc_tree, dist)
     non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
+    C = Morphology_Measures.convex_concav(scc_tree)
 
 
 def test_branch():
@@ -171,7 +172,8 @@ def test_branch():
     # lengths = Morphology_Measures.tree_branch_length(interp_tree)
     # non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
     # [mt, at, t] = TortuosityMeasures.DM_Tree(interp_tree)
-    T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
+    # T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
+    C = Morphology_Measures.convex_concav(scc_tree)
 
     # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
@@ -184,13 +186,13 @@ def test_all():
     with open('./positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
-    # type_tree = "norm_trees"
-    # folder = "norm_folder"
-    # result_file = "n_csv_output"
+    type_tree = "norm_trees"
+    folder = "norm_folder"
+    result_file = "n_csv_output"
     
-    type_tree = "hyper_trees"
-    folder = "hyper_folder"
-    result_file = "h_csv_output"
+    # type_tree = "hyper_trees"
+    # folder = "hyper_folder"
+    # result_file = "h_csv_output"
 
 
     names_1 = []
@@ -207,6 +209,8 @@ def test_all():
     dm_stl = []
     circularity = []
     linearity = []
+    conv = []
+    conv_m = []
     
     trees = config_data[type_tree]        
     for tree in trees:
@@ -231,9 +235,10 @@ def test_all():
             [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
             T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
             T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
+            [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
 
             names_1.append(tree["binary_image"])
-            tort.append(T_n)
+            tort.append(T)
             lengths.append(L)
             segments.append(seg)
             bifurcations.append(bifur)
@@ -242,6 +247,8 @@ def test_all():
             dm_stl.append(dm_st)
             circularity.append(T_c)
             linearity.append(T_l)
+            conv.append(C)
+            conv_m.append(C_m)
 
             names_2 += [tree["binary_image"]] * len(t_angles)
             angles += t_angles
@@ -253,12 +260,12 @@ def test_all():
             # print("{} \tTort = {} \tAngle = {}".format(tree["binary_image"], tort, m_angle))
             # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
             
-    tp1 = list(zip(names_1, tort, lengths, branch_length, segments, bifurcations, terminals, dm_stl, circularity, linearity))
+    tp1 = list(zip(names_1, tort, lengths, branch_length, segments, bifurcations, terminals, dm_stl, circularity, linearity, conv, conv_m))
     tp2 = list(zip(names_2, angles)) 
     tp3 = list(zip(names_3, all_branch_lengths)) 
 
     df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 
-                                     'Terminals', 'DM Tort', 'Circularity', 'Linearity'])
+                                     'Terminals', 'DM Tort', 'Circularity', 'Linearity', 'Convexity', 'Conv Mag'])
     df2 = pd.DataFrame(tp2, columns=['Image Name', 'Angles'])
     df3 = pd.DataFrame(tp3, columns=['Image Name', 'Branch Length'])
 
