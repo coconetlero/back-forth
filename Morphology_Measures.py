@@ -114,7 +114,7 @@ class Morphology_Measures:
                 if np.logical_or(v1 >= 180, v1 <= -180): v1 = np.mod(v1, np.sign(v1) * (-360))
                 if np.logical_or(v2 >= 180, v2 <= -180): v2 = np.mod(v2, np.sign(v2) * (-360))
                 
-                theta = np.mod(v1 - v2, 180)  
+                theta = np.mod(v2 - v1, 180)  
                 angles.append(theta)
             else:
                 bifurcations.add(v)
