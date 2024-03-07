@@ -179,11 +179,12 @@ def test_branch():
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
 
 
+
 def test_all():
     ###
     # 
     # ###
-    with open('./positions.yaml', 'r') as conf_file:
+    with open('/Users/zianfanti/IIMAS/Three_Representation/src/back-forth/positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
     type_tree = "norm_trees"
@@ -281,7 +282,7 @@ def test_all():
 
 if __name__ == '__main__':
     # test_circle(1)
-    test_paper()
+    # test_paper()
     # test_branch()
-    # test_all()
+    test_all()
     

@@ -2,6 +2,9 @@ hyper_folder: /Users/zianfanti/IIMAS/Three_Representation/data/db_Elena/ArbolesH
 norm_folder:  /Users/zianfanti/IIMAS/Three_Representation/data/db_Elena/ArbolesNorm/
 h_csv_output: /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/hyper_results.csv
 n_csv_output: /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/norm_results.csv
+angles_file:  /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/angles_results.csv 
+branch_length_file: /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/branch_length.csv
+measurements_file:  /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/all_trees_measurements.csv
 
 hyper_trees: 
   - binary_image: Hyper1_A_sk2.tif
