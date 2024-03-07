@@ -140,9 +140,12 @@ def test_paper():
     # dist = [2, 1, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1, 1]
     
     [X, Y] = imscc.plot_tree(scc_tree, dist)
+    imscc.display_tree(scc_tree, dist)
+
+    [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
     non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
     C = Morphology_Measures.convex_concav(scc_tree)
-
+    
 
 def test_branch():
     with open('./config.yaml', 'r') as file:
