@@ -9,8 +9,10 @@ import yaml
 
 import ImageToSCC as imscc
 
-from Tortuosity_Measures import TortuosityMeasures
+from SCC_Tree import SCC_Tree
 from Morphology_Measures import Morphology_Measures
+from Tortuosity_Measures import TortuosityMeasures
+
 from numpy import genfromtxt, diff
 
 
@@ -142,13 +144,14 @@ def test_paper():
     [X, Y] = imscc.plot_tree(scc_tree, dist)
     imscc.display_tree(scc_tree, dist)
 
-    [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
-    non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
-    C = Morphology_Measures.convex_concav(scc_tree)
     
+    # [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
+    non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
+    # C = Morphology_Measures.convex_concav(scc_tree)
 
-def test_branch():
-    with open('./config.yaml', 'r') as file:
+
+def open_tree_def():
+    with open('/Users/zianfanti/IIMAS/Three_Representation/src/back-forth/config.yaml', 'r') as file:
         config_data = yaml.safe_load(file)
 
     sp = (config_data["start_position"]["y"], config_data["start_position"]["x"])
@@ -160,23 +163,29 @@ def test_branch():
     o_file = config_data["base_folder"] + config_data["output_file"]
     d_file = config_data["base_folder"] + config_data["distances_file"]
 
-    
-
     treepath = imscc.build_tree(o_image, sp)
     interp_tree = imscc.build_interpolated_tree(treepath)
+
+    return interp_tree    
+    
+
+def test_branch():
+
+    interp_tree = open_tree_def()
     [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
     # imscc.display_tree(scc_tree, dist)
     [X, Y] = imscc.plot_tree(scc_tree, dist)
 
+    # [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
     # tort = TortuosityMeasures.SCC_Tree(scc)
     # [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
     # [segments, bifurcations, terminals] = Morphology_Measures.tree_scc_count_features(scc)
     # lengths = Morphology_Measures.tree_branch_length(interp_tree)
-    # non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
+    non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
     # [mt, at, t] = TortuosityMeasures.DM_Tree(interp_tree)
     # T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
-    C = Morphology_Measures.convex_concav(scc_tree)
+    # C = Morphology_Measures.convex_concav(scc_tree)
 
     # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
@@ -230,8 +239,9 @@ def test_all():
             interp_tree = imscc.build_interpolated_tree(treepath)
             [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
+            [X, Y] = imscc.plot_tree(scc_tree, dist)
 
-            [T, T_n] = TortuosityMeasures.SCC_Tree(scc_tree)      
+            [T, T_n] = TortuosityMeasures.Tree_SCC(scc_tree)      
             [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
             L = Morphology_Measures.tree_length(interp_tree)
             [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
@@ -280,12 +290,18 @@ def test_all():
 
     
 
+def test_tree_class():
+    interp_tree = open_tree_def()
+    scc_tree = SCC_Tree(interp_tree)
+
+    T_c = Morphology_Measures.tree_scc_circularity_2(scc_tree)
 
 
 
 if __name__ == '__main__':
     # test_circle(1)
     # test_paper()
-    # test_branch()
-    test_all()
+    # test_branch()
+    # test_all()
+    test_tree_class()
     

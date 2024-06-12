@@ -6,6 +6,7 @@ import yaml
 
 import ImageToSCC as imscc
 
+from SCC_Tree import SCC_Tree
 from Tortuosity_Measures import TortuosityMeasures
 from Morphology_Measures import Morphology_Measures
 
@@ -70,7 +71,8 @@ def measure_branch_angles(configuration):
 
                 treepath = imscc.build_tree(o_image, sp)
                 interp_tree = imscc.build_interpolated_tree(treepath)
-                [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
+                scc_tree= SCC_Tree(interp_tree).tree
+
                 [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
                 
                 angles =  [[container_image["binary_image"], str(container_image["type"]).capitalize(), disease, l] for l in t_angles]
@@ -106,20 +108,22 @@ def full_tree_measurements(configuration):
 
                 treepath = imscc.build_tree(o_image, sp)
                 interp_tree = imscc.build_interpolated_tree(treepath)
-                [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
+                scc_tree= SCC_Tree(interp_tree).tree
 
-                [T, T_n] = TortuosityMeasures.SCC_Tree(scc_tree)      
+                # [X, Y] = imscc.plot_tree(scc_tree, dist)
+
+                [T, T_n] = TortuosityMeasures.Tree_SCC(scc_tree)      
                 [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
                 L = Morphology_Measures.tree_length(interp_tree)
                 [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
                 [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
                 [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
-                T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
+                T_c = Morphology_Measures.tree_scc_circularity_2(scc_tree)
                 T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
                 [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
 
                 tree_measure = [[container_image["binary_image"], disease, str(container_image["type"]).capitalize(),
-                                 T, L, T / L, branch_mean_length, seg, bifur, term, dm_m, T_c, T_l, C_m]]
+                                 T, L, T / L, branch_mean_length, seg, bifur, term, dm_st, T_c, T_l, C_m]]
                 measurements += tree_measure 
 
     df = pd.DataFrame(measurements, columns=['Image Name', 'Disease', 'Vessel', 'Tortuosity_SCC', 'Length',

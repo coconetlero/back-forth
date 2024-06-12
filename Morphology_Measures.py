@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+import SCC_Tree
+
 from Tortuosity_Measures import TortuosityMeasures
 
 class Morphology_Measures:
@@ -213,6 +215,20 @@ class Morphology_Measures:
 
         return T_c
 
+    
+    @staticmethod
+    def tree_scc_circularity_2(scc_tree):
+        C_m = Morphology_Measures.slope_change_mean_2(scc_tree)
+
+        tree = scc_tree.tree
+        # obtain the circularity        
+        T_c = 0
+        for k in range(1, len(tree)):
+            current = tree[k]
+            if current <= 1:     
+               T_c += abs(current - C_m)
+
+        return T_c
 
     @staticmethod
     def curve_scc_circularity(scc_curve):
@@ -258,14 +274,22 @@ class Morphology_Measures:
     @staticmethod
     def slope_change_mean(scc_tree):
         n = 0
+        slope = 0
         for k in range(1, len(scc_tree)):
             current = scc_tree[k]
             if current <= 1:            
+                slope += current
                 n += 1        
 
-        C_m = 2 / n
-        return C_m
+        SC_m = 2 / n
+        return SC_m
     
+
+    @staticmethod
+    def slope_change_mean_2(scc_tree):
+        n = scc_tree.size
+        SC_m = 2 / n
+        return SC_m
 
     @staticmethod
     def convex_concav(scc_tree):

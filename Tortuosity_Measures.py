@@ -30,7 +30,7 @@ class TortuosityMeasures:
         return [SCC, alpha]
     
 
-    def SCC_Tree(scc_tree):
+    def Tree_SCC(scc_tree):
         slope_acc = 0
         count = 0
 
@@ -127,3 +127,33 @@ class TortuosityMeasures:
         mean_tort = np.average(tort)
         sum_tort = np.sum(tort)
         return [mean_tort, sum_tort, tort]
+    
+    
+
+
+
+    # assert len(interp_tree) > 3, "The length of the input must be contain at least 4 elements."  
+    #     length = 0
+    #     lengths = []
+    #     p1 = interp_tree[2]
+    #     ini = 2
+    #     end = 0
+    #     # traverse the whole tree     
+    #     for k in range(3, len(interp_tree) - 1):            
+    #         current = interp_tree[k]
+    #         if type(current) is tuple:                     
+    #             p2 = current
+    #             length += math.dist(p1,p2)
+    #             p1 = p2 
+    #             p2 = None
+    #         else:
+    #             if current == 1: continue
+    #             end = current
+    #             if end > ini:
+    #                 lengths.append(length)    
+    #             length = 0
+    #             ini = end               
+
+    #     mean_length = np.average(lengths)
+    #     sum_length = np.sum(lengths)
+    #     return [mean_length, sum_length, lengths]
