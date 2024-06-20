@@ -1,5 +1,9 @@
 import math
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+
+matplotlib.use('Qt5Agg')
 
 class SCC_Tree:
     
@@ -166,9 +170,11 @@ class SCC_Tree:
             alpha_n = 0
 
         return alpha_n 
+    
 
 
     def __get_size(self):
+
         if self.tree:
             n = 0        
             for k in range(1, len(self.tree)):
@@ -176,3 +182,156 @@ class SCC_Tree:
                 if current <= 1:                                
                     n += 1                    
             return n
+        
+
+    @staticmethod
+    def prune_tree(tree):
+        """ From the original string construct the extended string that contains 
+        the numbered bufurcations
+
+        Args:
+            tree (list): the list containing the original tree descriptor  
+
+        Returns:
+            list: a list containting the extended tree descriptor 
+        """
+        # find leafs and it's branches        
+        bifurcations = {}            
+        bifurcation_idx = {}
+        pruned_tree = list(tree)
+        pruned_idxs = range(0, len(tree))
+
+        b_idx = 3
+        while pruned_tree.count(1) > 2:       
+            idx = 1
+            pivot = -1            
+            prune = {}
+            temp_bifur = {}
+            visited = set()
+            while idx < len(pruned_tree):            
+                e = pruned_tree[idx]
+                if e == 1:
+                    pivot = idx
+                    inner_idx = 1
+                    while inner_idx > 0:
+                        p1 = pivot - inner_idx
+                        p2 = pivot + inner_idx
+                        e1 = pruned_tree[p1]
+                        e2 = pruned_tree[p2]
+                        # if e1 == -e2:
+                        if math.isclose(e1, -e2, rel_tol=1e-12):
+                            inner_idx += 1
+                        else:
+                            bifurcations[pruned_idxs[p1]] = pruned_idxs[p2]       
+                            temp_bifur[p1] = p2                                 
+                            node = prune.get(p1)
+                            if node:          
+                                visited.discard(node)               
+                                prune.pop(p1)
+                                prune[p2] = node
+                            else:                            
+                                prune[p2] = p1                                                                    
+                                visited.add(p1)
+                            inner_idx = 0
+                            idx = p2
+                idx += 1
+            
+            # mark bifurcations as a new leafs
+            
+            for n in visited:
+                prune.pop(temp_bifur[n])
+                bifurcations.pop(pruned_idxs[n])
+            
+            i1 = 0
+            i2 = 0
+            nodes = []
+            idxs = []
+            for p2, p1 in prune.items():            
+                i2 = p1
+                pruned_tree[p1] = 1       
+                nodes.extend(pruned_tree[i1:i2+1])
+                idxs.extend(pruned_idxs[i1:i2+1])                         
+                i1 = p2 + 1
+
+            nodes.extend(pruned_tree[i1:len(pruned_tree)])
+            idxs.extend(pruned_idxs[i1:len(pruned_tree)])  
+
+            pruned_tree = list(nodes)
+            pruned_idxs = list(idxs)
+
+        return bifurcations
+
+
+
+
+    @staticmethod
+    def create_extended_tree(tree):
+        extend_string = list(tree)        
+        bifurcations = SCC_Tree.prune_tree(tree)
+        sorted_bifurcations = sorted(bifurcations.items())
+
+        idx = 1
+        ext_idx = 0
+        b_idx = 3
+        node_bifur_idx = {}
+        while idx < len(tree):            
+            e = tree[idx]
+            if bifurcations.get(idx):
+                extend_string.insert(idx + ext_idx, b_idx)
+                node_bifur_idx[idx] = b_idx
+                b_idx += 1
+                ext_idx += 1
+
+            if e == 1:
+                pivot = idx
+                inner_idx = 1
+                extend_string.insert(idx + ext_idx, b_idx)
+                b_idx += 1
+                ext_idx += 1
+                while inner_idx > 0:
+                    p1 = pivot - inner_idx
+                    p2 = pivot + inner_idx
+                    e1 = tree[p1]
+                    e2 = tree[p2]
+                    if math.isclose(e1, -e2):
+                        inner_idx += 1
+                    else:
+                        bi = node_bifur_idx[p1]
+                        node_bifur_idx[p2] = bi
+                        extend_string.insert(p2 + ext_idx, bi)
+                        ext_idx += 1
+                        inner_idx = 0
+                        idx = p2
+            idx += 1
+
+        return extend_string
+
+    @staticmethod
+    def plot_tree(scc_tree):
+
+        yy1 = 0
+        xx1 = -8
+        slope = 0        
+        segment_size = 1
+        points = []
+        X = []
+        Y = []
+        k = 2
+        while k < len(scc_tree):
+            val = scc_tree[k]
+
+            if val < 2:
+                X.append(xx1)
+                Y.append(yy1)
+
+                s = np.double(val)
+                slope = slope + s
+                xx1 = xx1 + segment_size * np.cos(slope * np.pi)
+                yy1 = yy1 + segment_size * np.sin(slope * np.pi)
+            k += 1
+
+        plt.plot(X, Y, 'r.-')
+        plt.axis('equal')
+        plt.show()
+
+        return [X, Y]

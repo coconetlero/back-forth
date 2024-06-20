@@ -202,44 +202,22 @@ def test_bifurcation_finding_2():
 
     scc_tree_o =    [1, 0, -.25, 0, -.5, 0, 0, 0, 1, 0, -.5, 0, 0, 1, 0, 0, -.5, 0, -.5, 0, 0, -.5, 1, -.5, 0, 1, 0, 0, 0, 0, 0, 0, -.5, 0, 0, 1, 0, 0, -.25, 0]    
     scc_tree =      [2, 1, 0, 0, 3, -.25, 0, 4, -.5, 0, 0, 0, 5, 1, 0, 6, -.5, 0, 0, 7, 1, 0, 0, 6, -.5, 0, 4, -.5, 0, 0, 8, -.5, 9, 1, 8, -.5, 0, 10, 1, 0, 0, 0, 0, 0, 0, 3, -.5, 0, 0, 11, 1, 0, 0, 3, -.25, 0]    
-    dist =          [2, 1, 1, 1, 3, 1, 1, 4, 1, 1, 1, 1, 5, 1, 1, 6, 1, 1, 1, 7, 1, 1, 1, 6, 1, 1, 4, 1, 1, 1, 8, 1, 9, 1, 8, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 11, 1, 1, 1, 3, 1, 0]
 
-    extend_string = list(scc_tree_o)
+    scc_tree_o =    [1, 0, -.25, 0, -.5, 0, 0, 0, 1, 0, 0, 0, -.5, 0, 0, -.5, 0, 1, 0, -.5, 0, 1, 0, 0, 0, 0, 0, 0, -.5, 0, -.5, 1, -.5, 0, 1, 0, 0, 0, -.25, 0]    
+    scc_tree =      [2, 1, 0, 0, 3, -.25, 0, 4, -.5, 0, 0, 0, 5, 1, 0, 0, 0, 4, -.5, 0, 0, 6, -.5, 0, 7, 1, 0, 6, -.5, 0, 8, 1, 0, 6, 0, 0, 4, 0, 0, 0, 3, -.5, 0, 9, -.5, 10, 1, 9, -.5, 0, 11, 1, 0, 9, 0, 0, 3, -.25, 0]    
+   
+    scc_tree_o =    [1, 0, -.25, 0, -.5, 0, 0, 0, 1, 0, 0, 0, -.5, 0, 0, 0, -.5, 0, 1, 0, -.5, 0, 1, 0, 0, 0, -.75, 0, 1, 0, -.75, 0, 0, 1, 0, 0, -.5, 0, 0, 0, -.5, 0, -.5, 1, -.5, 0, 1, 0, 0, 0, -.25, 0]    
+    scc_tree =      [2, 1, 0, 0, 3, -.25, 0, 4, -.5, 0, 0, 0, 5, 1, 0, 0, 0, 4, -.5, 0, 6, 0, 0, 7, -.5, 0, 8, 1, 0, 7, -.5, 0, 9, 1, 0, 7, 0, 0, 6, -.75, 0, 10, 1, 0, 6, -.75, 0, 0, 11, 1, 0, 0, 6, -.5, 0, 4, 0, 0, 3, -.5, 0, 12, -.5, 13, 1, 12, -.5, 0, 14, 1, 0, 12, 0, 0, 3, -.25, 0]    
+   
+    # scc_tree_o =  [1, 0, 0, 0, -.75, 0, 1, 0, -.75, 0, 1, 0, -.75, 0, 1, 0, -.75, 0, 1, 0, -.75, 0, 1, 0, -.75, 0, 1, 0, -.75, 0, 1, 0, -.75, 0, 0, 0]    
+    # scc_tree =  [2, 1, 0, 0, 0, 0, 3, -.75, 4, 1, 3, -.75, 5, 1, 3, -.75, 6, 1, 3, -.75, 7, 1, 3, -.75, 8, 1, 3, -.75, 9, 1, 3, -.75, 10, 1, 3, -.75, 0, 0]    
+    
 
-    [X, Y] = imscc.plot_tree(scc_tree, dist)
-
-    bi = 1
-    idx = 0
-    e_idx = 3
-    pivot = -1    
-    bifurcation_idx = {}
-
-    while True:
-        # if idx != 0 & idx != len(scc_tree_o) -1:         
-        e = extend_string[idx]
-        if e == 1:
-            pivot = idx
-            inner_idx = 1
-            while inner_idx > 0:
-                e1 = extend_string[pivot + inner_idx]
-                e2 = extend_string[pivot - inner_idx]
-                if e1 == -e2:
-                    inner_idx += 1
-                else:
-                    i1 = pivot + inner_idx
-                    i2 = len(extend_string) + (pivot - inner_idx) if (pivot - inner_idx) < 0 else pivot - inner_idx    
-                    p1 = i1 if i1 < i2 else i2
-                    p2 = i1 if i1 > i2 else i2
-
-                    extend_string.insert(p1, e_idx)    
-                    extend_string.insert(p2 + 1, e_idx)                 
-                    inner_idx = 0
-                    e_idx += 1
-        idx += 1
-
-    extend_string.insert(0, 2) 
-    print(extend_string)
-
+    [X, Y] = SCC_Tree.plot_tree(scc_tree)
+    ext_tree = SCC_Tree.create_extended_tree(scc_tree_o)
+    ext_tree.insert(2, 0)
+    SCC_Tree.plot_tree(ext_tree)
+    
 
 
 def test_circle(r):
@@ -288,7 +266,7 @@ def test_paper():
     # dist = [2, 1, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1, 1]
     
     [X, Y] = imscc.plot_tree(scc_tree, dist)
-    # imscc.display_tree(scc_tree, dist)
+    imscc.display_tree(scc_tree, dist)
 
     
     # [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
@@ -321,7 +299,7 @@ def test_branch():
     interp_tree = open_tree_def()
     [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
-    # imscc.display_tree(scc_tree, dist)
+    imscc.display_tree(scc_tree, dist)
     [X, Y] = imscc.plot_tree(scc_tree, dist)
 
     # [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
@@ -439,9 +417,25 @@ def test_all():
 
 def test_tree_class():
     interp_tree = open_tree_def()
+    [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
+
+    # imscc.display_tree(scc_tree, dist)
+    [X, Y] = imscc.plot_tree(scc_tree, dist)
+
+
     scc_tree = SCC_Tree(interp_tree)
 
-    T_c = Morphology_Measures.tree_scc_circularity_2(scc_tree)
+    # T_c = Morphology_Measures.tree_scc_circularity_2(scc_tree)
+    
+    scc_tree_o = []
+    for e in scc_tree.tree:
+        if e <= 1:
+            scc_tree_o.append(e)
+
+    ext_tree = SCC_Tree.create_extended_tree(scc_tree_o)
+    ext_tree.insert(2, 0)
+    SCC_Tree.plot_tree(ext_tree)
+   
 
 
 
