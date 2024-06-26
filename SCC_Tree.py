@@ -319,32 +319,67 @@ class SCC_Tree:
     @staticmethod
     def create_extended_tree_2(tree):
         pruned_tree = list(tree)
-        
-        while pruned_tree.count(1) > 2:
-
+        pruned_idxs = range(0, len(tree))
+        bifurcations = set()
+        while len(pruned_tree) > 1:       
             idx = 1
-            visited = []
-            depth = 0
-            while idx < len(pruned_tree):            
-                visited.append(idx)
+            hold = {}
+            finished = False
+            finished_t = False
+            while not finished:    
                 e = pruned_tree[idx]
                 if e == 1:
                     pivot = idx
                     inner_idx = 1
-                    visited.pop()
                     while inner_idx > 0:
                         p1 = pivot - inner_idx
-                        p2 = pivot + inner_idx
+                        p2 = pivot + inner_idx 
+                        r1 = pruned_idxs[pivot - inner_idx]
+                        r2 = pruned_idxs[pivot + inner_idx] 
                         e1 = pruned_tree[p1]
                         e2 = pruned_tree[p2]
-                        # if e1 == -e2:
+                        finished_t = True if not finished_t and idx == 0 else finished_t                          
                         if math.isclose(e1, -e2, rel_tol=1e-12):
-                            inner_idx += 1
-                            visited.pop()
-                        else:
+                            inner_idx += 1                            
+                        else:                                    
+                            if not hold or hold.get(r1):
+                                if finished_t and hold.get(r2):
+                                    finished = True
+                                    break
+                                hold[r2] = r1                                 
+                            else:
+                                if finished_t:
+                                    finished = True
+                                    break
+                                hold.clear()
+                                hold[r2] = r1                                                             
+                            inner_idx = 0
                             idx = p2
-                            break
-                idx += 1
+                            
+                idx = (idx + 1) % len(pruned_tree)
+                
+            ## prune branches
+            nodes = list(pruned_tree)
+            indexes = list(pruned_idxs)
+            for r2, r1 in hold.items():     
+                bifurcations.add(r1)
+                bifurcations.add(r2)
+                p1 = pruned_idxs.index(r1)
+                p2 = pruned_idxs.index(r2)            
+                for idx in range(p1, p1 + ((p2 - p1) % len(nodes))):
+                    idx = idx % len(nodes)
+                    nodes[idx] = -1                            
+            nodes[p2] = 1     
+
+            pruned_tree = []
+            pruned_idxs = []
+            for i, e in zip(indexes, nodes):
+            
+                if e != -1:
+                    pruned_tree.append(e)
+                    pruned_idxs.append(i)
+        
+        return sorted(list(bifurcations))
 
 
     @staticmethod
