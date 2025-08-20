@@ -108,7 +108,7 @@ def full_tree_measurements(configuration):
 
                 treepath = imscc.build_tree(o_image, sp)
                 interp_tree = imscc.build_interpolated_tree(treepath)
-                scc_tree= SCC_Tree(interp_tree).tree
+                scc_tree = SCC_Tree(interp_tree).tree
 
                 # [X, Y] = imscc.plot_tree(scc_tree, dist)
 
@@ -118,7 +118,7 @@ def full_tree_measurements(configuration):
                 [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
                 [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
                 [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
-                T_c = Morphology_Measures.tree_scc_circularity_2(scc_tree)
+                T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
                 T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
                 [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
 
@@ -137,11 +137,11 @@ def full_tree_measurements(configuration):
 
 if __name__ == '__main__':
 
-    # angles_file:  /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/angles_results.csv 
-    # branch_length_file: /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/branch_length.csv
-    # measurements_file:  /Users/zianfanti/IIMAS/Three_Representation/results/db_Elena/all_trees_measurements.csv
+    # angles_file:  /Users/zianfanti/IIMAS/Tree_Representation/results/db_Elena/angles_results.csv 
+    # branch_length_file: /Users/zianfanti/IIMAS/Tree_Representation/results/db_Elena/branch_length.csv
+    # measurements_file:  /Users/zianfanti/IIMAS/Tree_Representation/results/db_Elena/all_trees_measurements.csv
 
-    with open('/Users/zianfanti/IIMAS/Three_Representation/src/back-forth/positions.yaml', 'r') as conf_file:
+    with open('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
 

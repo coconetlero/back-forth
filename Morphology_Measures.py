@@ -208,10 +208,10 @@ class Morphology_Measures:
 
         # obtain the circularity        
         T_c = 0
-        for k in range(1, len(scc_tree)):
+        for k in range(1, len(scc_tree)):            
             current = scc_tree[k]
             if current <= 1:     
-               T_c += abs(current - C_m)
+               T_c += abs(current - C_m)            
 
         return T_c
 
@@ -229,6 +229,7 @@ class Morphology_Measures:
                T_c += abs(current - C_m)
 
         return T_c
+
 
     @staticmethod
     def curve_scc_circularity(scc_curve):
@@ -290,6 +291,7 @@ class Morphology_Measures:
         n = scc_tree.size
         SC_m = 2 / n
         return SC_m
+
 
     @staticmethod
     def convex_concav(scc_tree):

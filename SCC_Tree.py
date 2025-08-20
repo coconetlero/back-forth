@@ -6,13 +6,17 @@ import matplotlib.pyplot as plt
 matplotlib.use('Qt5Agg')
 
 class SCC_Tree:
+    """A class to build and represent a tree by its back and forht chain"""
     
     size = 0
+    size_without_terminals = 0
     tree = []
     dists = []
 
+
     def __init__(self, tree_path) -> None:
         [self.tree, self.dists] = self.__build_scc_tree(tree_path)
+        self.size_without_terminals = self.__get_size_without_terminals()
         self.size = self.__get_size()
 
 
@@ -173,8 +177,28 @@ class SCC_Tree:
     
 
 
-    def __get_size(self):
+    def __get_size_without_terminals(self) -> int:
+        """Get the amount of chain elements whose numerical values are less than one, 
+            i.e. without the terminal nodes of the tree
+        Returns:
+            int: the amount of chain elements whose numerical values are less than one
+        """
 
+        if self.tree:
+            n = 0        
+            for k in range(1, len(self.tree)):
+                current = self.tree[k]
+                if current < 1:                                
+                    n += 1                    
+            return n
+        
+
+    def __get_size(self) -> int:
+        """ Get the amount of chain elements in the tree representation
+
+        Returns:
+            int: the amount of chain elements
+        """
         if self.tree:
             n = 0        
             for k in range(1, len(self.tree)):
@@ -187,7 +211,7 @@ class SCC_Tree:
     @staticmethod
     def prune_tree(tree):
         """ From the original string construct the extended string that contains 
-        the numbered bufurcations
+        the numbered bufurcations (NOT FINISHED YET)
 
         Args:
             tree (list): the list containing the original tree descriptor  

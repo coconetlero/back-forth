@@ -278,19 +278,32 @@ def test_paper():
 
     # scc_tree = [2, 1, 0, 0, 3, -0.75, 0, 4, 1, 0, 3, 0.25, 0, 5, 1, 0, 3, -0.5, 0, 0]
     # dist = [2, 1, 1, 1, 3, 1, 1, 4, 1, 1, 3, 1, 1, 5, 1, 1, 3, 1, 1, 1]
+
+    scc_tree = [1, 0, 0, 0, 0, 0, 0, 0, 0, -.25, 0, -.1, 0, -.2, 0, .2, 0, 1, 0, -.2, 0, .2, 0, .1, 0, -.6,
+                0, .1, 0, -.2, .1, 0, 1, 0, -.1, .2, 0, -.1, 0, -.65, 0, -.1, 0, -.2, 0, .2, 0, 1, 0, -.2, 0,
+                .2, 0, .1, 0, -.5, 0, 0, 0, 0, 0, 0, 0, 0]
     
-    [X, Y] = imscc.plot_tree(scc_tree, dist)
-    imscc.display_tree(scc_tree, dist)
+    scc_tree = [1, 0, 0, 0, 0, 0, 0, 0, 0, -.25, -.08, -.08, -.08, -.08, -.08, -.08, -.08, 1, .08, .08, .08,
+                .08, .08, .08, .08, -.50, .05, .05, .05, .05, .05, .05, 1, -.05, -.05, -.05, -.05, -.05, -.05, 
+                -.75, .06, .06, .06, .06, .06, .06, .06, 1, -.06, -.06, -.06, -.06, -.06, -.06, -.06, -.5, 0, 
+                0, 0, 0, 0, 0, 0, 0]
+    
+    # [X, Y] = imscc.plot_tree(scc_tree, dist)
+    # imscc.display_tree(scc_tree, dist)
 
     
     # [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
-    [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
-    # non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
+    # [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+    non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
+    T = TortuosityMeasures.Tree_SCC(scc_tree)    
+    M_sc = Morphology_Measures.slope_change_mean(scc_tree)
     # C = Morphology_Measures.convex_concav(scc_tree)
+
+    print("NCirc = {} Tort = {} Mean Slope Chain = {}".format(non_circ, T, M_sc))
 
 
 def open_tree_def():
-    with open('/Users/zianfanti/IIMAS/Three_Representation/src/back-forth/config.yaml', 'r') as file:
+    with open('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml', 'r') as file:
         config_data = yaml.safe_load(file)
 
     sp = (config_data["start_position"]["y"], config_data["start_position"]["x"])
@@ -316,6 +329,8 @@ def test_branch():
     imscc.display_tree(scc_tree, dist)
     [X, Y] = imscc.plot_tree(scc_tree, dist)
 
+    scc_tree_c = SCC_Tree(interp_tree)  
+
     # [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
     # tort = TortuosityMeasures.SCC_Tree(scc)
     # [m_angle, angles] = morph.tree_scc_branch_anlge(scc)
@@ -328,6 +343,7 @@ def test_branch():
 
     # print("{} - Tort = {} - Angle = {}".format(config_data["binary_image"], tort, angle))
     # print("{}\t{}\t{}".format(config_data["binary_image"], tort, angle))
+    print("{}\t{}".format(config_data["binary_image"], non_circ))
 
 
 
@@ -335,7 +351,7 @@ def test_all():
     ###
     # 
     # ###
-    with open('/Users/zianfanti/IIMAS/Three_Representation/src/back-forth/positions.yaml', 'r') as conf_file:
+    with open('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/positions.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
 
     type_tree = "norm_trees"
@@ -437,10 +453,7 @@ def test_tree_class():
     [X, Y] = imscc.plot_tree(scc_tree, dist)
 
 
-    scc_tree = SCC_Tree(interp_tree)
-
-    # T_c = Morphology_Measures.tree_scc_circularity_2(scc_tree)
-    
+    scc_tree = SCC_Tree(interp_tree)    
     scc_tree_o = []
     for e in scc_tree.tree:
         if e <= 1:
@@ -455,9 +468,9 @@ def test_tree_class():
 
 if __name__ == '__main__':
     # test_circle(1)
-    # test_paper()
+    test_paper()
     # test_branch()
     # test_all()
     # test_tree_class()
-    test_bifurcation_finding_2()
+    # test_bifurcation_finding_2()
     
