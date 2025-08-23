@@ -734,7 +734,7 @@ def plot_tree(scc_tree, dist_tree):
     segment_size = 1
     xx1 = -8
     yy1 = 0
-    points = []
+
     X = []
     Y = []
     k = 2
