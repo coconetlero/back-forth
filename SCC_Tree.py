@@ -452,7 +452,7 @@ class SCC_Tree:
                             pass                            
 
                         a = abs(slope_acc_position[visited_idx[-1] - 1] - slope_acc)
-                        if a == 1:
+                        if math.isclose(a, 1.0, rel_tol=1e-12):
                             pass                            
                         else:
                             backward = False
