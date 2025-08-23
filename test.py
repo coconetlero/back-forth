@@ -266,6 +266,8 @@ def test_paper():
 
     scc_tree = [2, 1, 0, 0, 0, 0, 3, -.3, 0, -.1, 0, 4, 1, 0, .1, 0, 3, -.6, 0, 0, 5, -.2, -.3, 6, 1, 
                 .3, 5, -.7, .2, 7, 1, -.2, 5, -.1, 0, 0, 3, -.8, 0, 0, .3, 8, 1, -.3, 0, 0, 3, -.3, 0, 0, 0, 0]
+    scc_tree_o = [1, 0, 0, 0, -.3, 0, -.1, 0, 1, 0, .1, 0, -.6, 0, 0, -.2, -.3, 1, 
+                .3, -.7, .2, 1, -.2, -.1, 0, 0, -.8, 0, 0, .3, 1, -.3, 0, 0, -.3, 0, 0, 0, ]
     dist = [2, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 4, 1, 1, 1, 1, 3, 1, 1, 1, 5, 1, 1, 6, 1, 
             1, 5, 1, 1, 7, 1, 1, 5, 1, 1, 1, 3, 1, 1, 1, 1, 8, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1]
     
@@ -291,7 +293,8 @@ def test_paper():
     
     [X, Y] = imscc.plot_tree(scc_tree, dist)
     # imscc.display_tree(scc_tree, dist)
-
+    bifurcations = SCC_Tree.create_extended_tree_3(scc_tree_o)
+    print(bifurcations)
     
     # [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
     # [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
@@ -469,10 +472,10 @@ def test_tree_class():
 
 if __name__ == '__main__':
     # test_circle(1)
-    # test_paper()
+    test_paper()
     # test_branch()
     # test_all()
     # test_tree_class()
-    test_bifurcation_finding_2()
+    # test_bifurcation_finding_2()
 
     
