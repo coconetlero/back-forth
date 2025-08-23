@@ -404,6 +404,71 @@ class SCC_Tree:
                     pruned_idxs.append(i)
         
         return sorted(list(bifurcations))
+    
+
+
+    @staticmethod
+    def create_extended_tree_3(tree):
+        """
+        Create an extended tree representation without grade restrictions.
+        Args:
+            tree (list): the list containing the original tree descriptor
+        Returns:
+            list: the extended tree representation
+        """
+        
+        bifurcations = {}
+        bifurcations_counter = set()      
+        slope_acc = 0
+        backward = False
+        visited_idx = []
+        slope_acc_position = [None] * len(tree)
+        slope_acc_position[0] = 0.0
+
+        for idx in range(1, len(tree)):
+            slope = tree[idx]  
+            slope_acc += slope
+            slope_acc_position[idx] = slope_acc
+
+            if slope_acc > 1.0: 
+                slope_acc_position[-1] = slope_acc % -1.0
+            if slope_acc < -1.0: 
+                slope_acc_position[-1] = slope_acc % 1.0
+            
+            if slope == 1.0:
+                backward = True
+            else:
+                if backward:
+                    last_visited_idx = visited_idx.pop()
+                    last_visited_slope = tree[last_visited_idx] 
+                    if math.isclose(slope, -last_visited_slope, rel_tol=1e-12): 
+                        pass
+                    else:                                                                      
+                        bifurcations_counter.add(idx)
+                        bifurcations_counter.add(last_visited_idx)
+                        
+                        bifurcations[idx] = last_visited_idx
+                        if last_visited_idx in bifurcations:
+                            pass                            
+
+                        a = abs(slope_acc_position[visited_idx[-1] - 1] - slope_acc)
+                        if a == 1:
+                            pass                            
+                        else:
+                            backward = False
+                            visited_idx.append(idx)                                                    
+                else:
+                    visited_idx.append(idx)
+                    
+        return sorted(list(bifurcations_counter))        
+
+
+                
+
+
+
+
+
 
 
     @staticmethod

@@ -617,6 +617,8 @@ def show_plot(doc) -> None:
 
 
 def display_tree(scc_tree, dist_tree):
+    if not dist_tree:
+        dist_tree = [1] * len(scc_tree)
 
     slope = 0
     segment_size = 1
@@ -647,6 +649,8 @@ def display_tree(scc_tree, dist_tree):
     polyline.append_vertices(points)
 
     show_plot(doc)
+
+
 
 
 def display_tree_2(scc_filename, dist_filename):
