@@ -1,0 +1,10 @@
+image_folder: /Users/zianfanti/Trabajo/tree_representation/data/neuro_morpho/neurons_skeletons/
+
+skeleton_images:
+  - image: 
+    filename: MAX_LG14.CNG.tif
+    start_position:
+      - position:
+          x: 56
+          y: 227
+  
