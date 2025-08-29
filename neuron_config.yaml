@@ -8,3 +8,30 @@ skeleton_images:
           x: 56
           y: 227
   
+  - image: 
+    filename: MAX_LG8.CNG.tif
+    start_position:
+      - position:
+          x: 259
+          y: 352
+  
+  - image: 
+    filename: MAX_HG5.CNG.tif
+    start_position: 
+      - position:
+          x: 117
+          y: 242
+  
+  - image: 
+    filename: MAX_HG12.CNG.tif
+    start_position:
+      - position:
+          x: 131
+          y: 102
+
+  - image: 
+    filename: MAX_sc147_e2216_26.CNG.tif
+    start_position:
+      - position:
+          x: 762
+          y: 341

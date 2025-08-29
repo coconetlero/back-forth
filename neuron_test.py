@@ -11,11 +11,19 @@ from Tortuosity_Measures import TortuosityMeasures
 
 matplotlib.use('Qt5Agg')
 
-def measure_neuron_tree():
+def measure_neuron_tree(image_filename):
     with open('/Users/zianfanti/Trabajo/tree_representation/back-forth/neuron_config.yaml', 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
+    im = None
+    images = config_data['skeleton_images']
+    for i, item in enumerate(images):
+        if item['filename'] == image_filename:
+            im = config_data['skeleton_images'][i]
+            break
 
-    im = config_data['skeleton_images'][0]
+    assert im is not None, "file: " + image_filename + " doesn't exist"
+
+    im = config_data['skeleton_images'][i]
     image_path = os.path.join(config_data["image_folder"], im['filename'])
 
     start_position = im['start_position'][0]
@@ -48,4 +56,4 @@ def measure_neuron_tree():
     return interp_tree    
 
 if __name__ == '__main__':
-    measure_neuron_tree()
+    measure_neuron_tree('MAX_sc147_e2216_26.CNG.tif')
