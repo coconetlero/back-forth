@@ -139,7 +139,7 @@ def build_interpolated_tree(tree_path):
         data = tree_path[k]
 
         if type(data) is not tuple:
-            print(branch[-1])
+            # print(branch[-1])
             if data != 1:
                 if not p1:
                     p1 = data

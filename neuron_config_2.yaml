@@ -1,0 +1,425 @@
+image_folder: ../../data/neurons_skeletons/skel/
+masurements_csv_file: ../../results/neuron_measurements_v2.csv
+
+
+skeleton_images:
+  - image: 
+    subfolder: pushchin
+    filename: 010.CNG.tif
+    start_position:
+      - position:
+          x: 481
+          y: 2051
+
+  - image: 
+    subfolder: pushchin
+    filename: 008.CNG.tif
+    start_position:
+      - position:
+          x: 659
+          y: 436
+  
+  - image: 
+    subfolder: pushchin
+    filename: 007.CNG.tif
+    start_position:
+      - position:
+          x: 313
+          y: 1693
+  
+  - image: 
+    subfolder: pushchin
+    filename: 006.CNG.tif
+    start_position:
+      - position:
+          x: 863
+          y: 407
+  
+  - image: 
+    subfolder: pushchin
+    filename: 005.CNG.tif
+    start_position:
+      - position:
+          x: 97
+          y: 361
+  
+  - image: 
+    subfolder: pushchin
+    filename: 004.CNG.tif
+    start_position:
+      - position:
+          x: 977
+          y: 130
+
+  - image: 
+    subfolder: pushchin
+    filename: 003.CNG.tif
+    start_position:
+      - position:
+          x: 998
+          y: 358
+  
+  - image: 
+    subfolder: pushchin
+    filename: 002.CNG.tif
+    start_position:
+      - position:
+          x: 529
+          y: 126
+
+  - image: 
+    subfolder: pushchin
+    filename: 001.CNG.tif
+    start_position:
+      - position:
+          x: 1914
+          y: 2234
+  
+  - image: 
+    subfolder: schornig_taverna
+    filename: 14d_Bagheera_I_Max-ims.CNG.tif
+    start_position:
+      - position:
+          x: 150
+          y: 340
+  
+  - image: 
+    subfolder: schornig_taverna
+    filename: 14d_Bagheera_VII_OK-ims.CNG.tif
+    start_position:
+      - position:
+          x: 1026
+          y: 1701
+
+  - image: 
+    subfolder: schornig_taverna
+    filename: 14d_Bagheera-ims.CNG.tif
+    start_position:
+      - position:
+          x: 92
+          y: 31
+
+  - image: 
+    subfolder: schornig_taverna
+    filename: 14d_Balu_II_MAX-ims.CNG.tif
+    start_position:
+      - position:
+          x: 1332
+          y: 1578
+
+  - image: 
+    subfolder: schornig_taverna
+    filename: 14d_Balu_IV_MAX-ims.CNG.tif
+    start_position:
+      - position:
+          x: 7450
+          y: 995
+
+  - image: 
+    subfolder: schornig_taverna
+    filename: 14d_Balu_IX_MAX-ims.CNG.tif
+    start_position:
+      - position:
+          x: 1303
+          y: 1081
+  
+  - image: 
+    subfolder: schornig_taverna
+    filename: 14d_Balu_V.CNG.tif
+    start_position:
+      - position:
+          x: 957
+          y: 458
+
+  - image:
+    subfolder: schornig_taverna
+    filename: 14d_Balu_VII_MAX-ims.CNG.tif
+    start_position:
+      - position:
+          x: 1702
+          y: 2604
+  
+  - image:
+    subfolder: schornig_taverna
+    filename: 14d_Balu_XI_MAX-ims.CNG.tif
+    start_position:
+      - position:
+          x: 526
+          y: 4307
+  
+  - image:
+    subfolder: schornig_taverna
+    filename: Bagheera_1.CNG.tif
+    start_position:
+      - position:
+          x: 1009
+          y: 1804
+
+  - image:
+    subfolder: schornig_taverna
+    filename: Bagheera_2.CNG.tif
+    start_position:
+      - position:
+          x: 499
+          y: 1897
+
+  - image:
+    subfolder: bianchi
+    filename: 4A-40x.CNG.tif
+    start_position:
+      - position:
+          x: 1116
+          y: 585
+  
+  - image:
+    subfolder: bianchi
+    filename: 4B-40x.CNG.tif
+    start_position:
+      - position:
+          x: 450
+          y: 227
+
+  - image:
+    subfolder: bianchi
+    filename: 4C-40x.CNG.tif
+    start_position:
+      - position:
+          x: 413
+          y: 20
+
+  - image:
+    subfolder: bianchi
+    filename: 4D-40x.CNG.tif
+    start_position:
+      - position:
+          x: 444
+          y: 493
+
+  - image:
+    subfolder: bianchi
+    filename: 4E-40x.CNG.tif
+    start_position:
+      - position:
+          x: 425
+          y: 223
+
+  - image:
+    subfolder: bianchi
+    filename: 4G-40x.CNG.tif
+    start_position:
+      - position:
+          x: 1012
+          y: 719
+
+  - image:
+    subfolder: bianchi
+    filename: 4J-40x.CNG.tif
+    start_position:
+      - position:
+          x: 609
+          y: 512
+
+  - image:
+    subfolder: bianchi
+    filename: 8A-40x.CNG.tif
+    start_position:
+      - position:
+          x: 1111
+          y: 420
+
+  - image:
+    subfolder: bianchi
+    filename: 8B-40x.CNG.tif
+    start_position:
+      - position:
+          x: 681
+          y: 659
+
+  - image:
+    subfolder: bianchi
+    filename: 8C-40x.CNG.tif
+    start_position:
+      - position:
+          x: 1367
+          y: 618
+
+  - image:
+    subfolder: bianchi
+    filename: 8D-40x.CNG.tif
+    start_position:
+      - position: 
+          x: 466
+          y: 464
+  
+  - image:
+    subfolder: bianchi
+    filename: 8F-40x.CNG.tif
+    start_position:
+      - position:
+          x: 301
+          y: 235
+  
+  - image:
+    subfolder: bianchi
+    filename: 8G-40x.CNG.tif      
+    start_position:
+      - position:
+          x: 411
+          y: 3
+
+  - image:
+    subfolder: bianchi
+    filename: AdGo-neuronB.CNG.tif
+    start_position:
+      - position:
+          x: 761
+          y: 1546  
+  
+  - image:
+    subfolder: bianchi
+    filename: AdGoH-neuronC.CNG.tif
+    start_position:
+      - position:
+          x: 1137
+          y: 457
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoH-neuronG.CNG.tif
+    start_position:
+      - position:
+          x: 623
+          y: 1399
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoH-neuronH.CNG.tif
+    start_position:
+      - position:
+          x: 1318
+          y: 1477
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoH-neuronI.CNG.tif
+    start_position:
+      - position:
+          x: 1204
+          y: 1027
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronA.CNG.tif
+    start_position:
+      - position:
+          x: 2531
+          y: 7
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronB.CNG.tif
+    start_position:
+      - position:
+          x: 1491
+          y: 912
+  
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronC.CNG.tif
+    start_position:
+      - position:
+          x: 758
+          y: 7
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronD.CNG.tif
+    start_position:
+      - position:
+          x: 1137
+          y: 716
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronE.CNG.tif
+    start_position:
+      - position:
+          x: 1705
+          y: 1702
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronF.CNG.tif
+    start_position:
+      - position:
+          x: 1637
+          y: 354
+
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronG.CNG.tif
+    start_position:
+      - position:
+          x: 1736
+          y: 663
+
+  - image:
+    subfolder: bianchi
+    filename: Devel15-neuronG.CNG.tif
+    start_position:
+      - position:
+          x: 1614
+          y: 9
+
+  - image:
+    subfolder: bianchi
+    filename: Devel15-neuronH.CNG.tif
+    start_position:
+      - position:
+          x: 196
+          y: 1084
+  
+  - image:
+    subfolder: bianchi
+    filename: Devel15-neuronI.CNG.tif
+    start_position:
+      - position:
+          x: 874
+          y: 1007
+
+  - image:
+    subfolder: bianchi
+    filename: Devel15-neuronK.CNG.tif
+    start_position:
+      - position:
+          x: 1375
+          y: 4887
+
+  - image:
+    subfolder: bianchi
+    filename: Devel15-neuronL.CNG.tif
+    start_position:
+      - position:
+          x: 792
+          y: 37
+
+  - image:
+    subfolder: bianchi
+    filename: Devel31-neuronF.CNG.tif
+    start_position:
+      - position:
+          x: 1985
+          y: 940
+
+  - image:
+    subfolder: bianchi
+    filename: Devel31-neuronH.CNG.tif
+    start_position:
+      - position:
+          x: 447
+          y: 775
+  
+  
+
+  
+  

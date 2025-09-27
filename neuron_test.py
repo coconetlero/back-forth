@@ -3,6 +3,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
 import yaml
 
 import ImageToSCC as imscc
@@ -11,8 +12,8 @@ from Tortuosity_Measures import TortuosityMeasures
 
 matplotlib.use('Qt5Agg')
 
-def measure_neuron_tree(image_filename):
-    with open('/Users/zianfanti/Trabajo/tree_representation/back-forth/neuron_config.yaml', 'r') as conf_file:
+def measure_neuron_tree(config_file, image_filename):
+    with open(config_file, 'r') as conf_file:
         config_data = yaml.safe_load(conf_file)
     im = None
     images = config_data['skeleton_images']
@@ -24,7 +25,11 @@ def measure_neuron_tree(image_filename):
     assert im is not None, "file: " + image_filename + " doesn't exist"
 
     im = config_data['skeleton_images'][i]
-    image_path = os.path.join(config_data["image_folder"], im['filename'])
+    if im['subfolder'] is not None:
+        image_path = os.path.join(config_data["image_folder"], im['subfolder'], im['filename'])
+    else:
+        image_path = os.path.join(config_data["image_folder"], im['filename'])
+
 
     start_position = im['start_position'][0]
     sp = (start_position['position']['y'],start_position['position']['x'])
@@ -32,9 +37,6 @@ def measure_neuron_tree(image_filename):
     assert os.path.isfile(image_path), "The image {} doesn't exixt".format(config_data["binary_image"])
 
     o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    # o_file = config_data["base_folder"] + config_data["output_file"]
-    # d_file = config_data["base_folder"] + config_data["distances_file"]
-
     treepath = imscc.build_tree(o_image, sp)
     interp_tree = imscc.build_interpolated_tree(treepath)
 
@@ -53,7 +55,194 @@ def measure_neuron_tree(image_filename):
     T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
     [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
 
+    print("{} \tTort = {} \tAngle = {}".format(im['filename'], T, m_angle))  
+
     return interp_tree    
 
+
+def measure_all():
+
+    names_1 = []
+    names_2 = []
+    names_3 = []
+    tort = []
+    angles = []
+    lengths = []
+    segments = []
+    bifurcations = []
+    terminals = []
+    branch_length = []
+    all_branch_lengths = []
+    dm_stl = []
+    circularity = []
+    linearity = []
+    conv = []
+    conv_m = []
+
+    with open('neuron_config.yaml', 'r') as conf_file:
+        config_data = yaml.safe_load(conf_file)
+    
+    images = config_data['skeleton_images']
+    for i, item in enumerate(images):
+        im = config_data['skeleton_images'][i]
+        image_path = os.path.join(config_data["image_folder"], im['filename'])
+
+        start_position = im['start_position'][0]
+        sp = (start_position['position']['y'],start_position['position']['x'])
+        
+        assert os.path.isfile(image_path), "The image {} doesn't exixt".format(config_data["binary_image"])
+
+        o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        treepath = imscc.build_tree(o_image, sp)
+        interp_tree = imscc.build_interpolated_tree(treepath)
+        [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
+
+
+        # o_file = config_data["base_folder"] + config_data["output_file"]
+        # d_file = config_data["base_folder"] + config_data["distances_file"]
+
+        # [X, Y] = imscc.plot_tree(scc_tree, dist)
+
+        [T, T_n] = TortuosityMeasures.Tree_SCC(scc_tree)      
+        [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
+        L = Morphology_Measures.tree_length(interp_tree)
+        [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
+        [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+        [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
+        T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
+        T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
+        [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
+
+        names_1.append(im['filename'])
+        tort.append(T)
+        lengths.append(L)
+        segments.append(seg)
+        bifurcations.append(bifur)
+        terminals.append(term)
+        branch_length.append(branch_mean_length)
+        dm_stl.append(dm_st)
+        circularity.append(T_c)
+        linearity.append(T_l)
+        conv.append(C)
+        conv_m.append(C_m)
+
+        names_2 += [im['filename']] * len(t_angles)
+        angles += t_angles
+
+        names_3 += [im['filename']] * len(branch_lengths)
+        all_branch_lengths += branch_lengths
+
+
+        print("{} \tTort = {} \tAngle = {}".format(im['filename'], T, m_angle))        
+            
+    tp1 = list(zip(names_1, tort, lengths, branch_length, segments, bifurcations, terminals, dm_stl, circularity, linearity, conv, conv_m))
+    tp2 = list(zip(names_2, angles)) 
+    tp3 = list(zip(names_3, all_branch_lengths)) 
+
+    df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 
+                                     'Terminals', 'DM Tort', 'Circularity', 'Linearity', 'Convexity', 'Conv Mag'])
+    df2 = pd.DataFrame(tp2, columns=['Image Name', 'Angles'])
+    df3 = pd.DataFrame(tp3, columns=['Image Name', 'Branch Length'])
+
+    df1.to_csv(config_data["masurements_csv_file"], mode='a')
+    df2.to_csv(config_data["masurements_csv_file"], mode='a')
+    df3.to_csv(config_data["masurements_csv_file"], mode='a')
+
+
+def measure_all_v2():
+
+    names_1 = []
+    names_2 = []
+    names_3 = []
+    tort = []
+    angles = []
+    lengths = []
+    segments = []
+    bifurcations = []
+    terminals = []
+    branch_length = []
+    all_branch_lengths = []
+    dm_stl = []
+    circularity = []
+    linearity = []
+    conv = []
+    conv_m = []
+
+    with open('neuron_config_2.yaml', 'r') as conf_file:
+        config_data = yaml.safe_load(conf_file)
+        
+    images = config_data['skeleton_images']
+    for i, item in enumerate(images):
+        im = config_data['skeleton_images'][i]
+        image_path = os.path.join(config_data["image_folder"], im['subfolder'], im['filename'])
+
+        start_position = im['start_position'][0]
+        sp = (start_position['position']['y'],start_position['position']['x'])
+        
+        assert os.path.isfile(image_path), "The image {} doesn't exixt".format(image_path)
+        print("Processing image: {}".format(image_path))    
+
+        o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        treepath = imscc.build_tree(o_image, sp)
+        interp_tree = imscc.build_interpolated_tree(treepath)
+        [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
+
+
+        # o_file = config_data["base_folder"] + config_data["output_file"]
+        # d_file = config_data["base_folder"] + config_data["distances_file"]
+
+        # [X, Y] = imscc.plot_tree(scc_tree, dist)
+
+        [T, T_n] = TortuosityMeasures.Tree_SCC(scc_tree)      
+        [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
+        L = Morphology_Measures.tree_length(interp_tree)
+        [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
+        [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+        [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
+        T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
+        T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
+        [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
+
+        names_1.append(im['filename'])
+        tort.append(T)
+        lengths.append(L)
+        segments.append(seg)
+        bifurcations.append(bifur)
+        terminals.append(term)
+        branch_length.append(branch_mean_length)
+        dm_stl.append(dm_st)
+        circularity.append(T_c)
+        linearity.append(T_l)
+        conv.append(C)
+        conv_m.append(C_m)
+
+        names_2 += [im['filename']] * len(t_angles)
+        angles += t_angles
+
+        names_3 += [im['filename']] * len(branch_lengths)
+        all_branch_lengths += branch_lengths
+
+
+        print("{} \tTort = {} \tAngle = {}".format(im['filename'], T, m_angle))        
+            
+    tp1 = list(zip(names_1, tort, lengths, branch_length, segments, bifurcations, terminals, dm_stl, circularity, linearity, conv, conv_m))
+    tp2 = list(zip(names_2, angles)) 
+    tp3 = list(zip(names_3, all_branch_lengths)) 
+
+    df1 = pd.DataFrame(tp1, columns=['Image Name', 'Tortuosity', 'Length', 'Average Length', 'Segments', 'Bifurcations', 
+                                     'Terminals', 'DM Tort', 'Circularity', 'Linearity', 'Convexity', 'Conv Mag'])
+    df2 = pd.DataFrame(tp2, columns=['Image Name', 'Angles'])
+    df3 = pd.DataFrame(tp3, columns=['Image Name', 'Branch Length'])
+
+    df1.to_csv(config_data["masurements_csv_file"], mode='a')
+    df2.to_csv(config_data["masurements_csv_file"], mode='a')
+    df3.to_csv(config_data["masurements_csv_file"], mode='a')
+
+
 if __name__ == '__main__':
-    measure_neuron_tree('MAX_sc147_e2216_26.CNG.tif')
+    measure_neuron_tree('neuron_config_2.yaml', 'AdGoI-neuronD.CNG.tif')
+
+    # measure_all()
+
+    # measure_all_v2()
+

@@ -1,4 +1,5 @@
-image_folder: /Users/zianfanti/Trabajo/tree_representation/data/neuro_morpho/neurons_skeletons/
+image_folder: ../../data/neurons_skeletons/
+masurements_csv_file: ../../results/neuron_measurements.csv
 
 skeleton_images:
   - image: 
@@ -19,8 +20,8 @@ skeleton_images:
     filename: MAX_HG5.CNG.tif
     start_position: 
       - position:
-          x: 117
-          y: 242
+          x: 372
+          y: 380
   
   - image: 
     filename: MAX_HG12.CNG.tif
@@ -35,3 +36,24 @@ skeleton_images:
       - position:
           x: 762
           y: 341
+
+  - image: 
+    filename: A6_001_S.tif
+    start_position:
+      - position:
+          x: 573
+          y: 2483
+
+  - image: 
+    filename: A6_002_S.tif
+    start_position:
+      - position:
+          x: 299
+          y: 398
+
+  - image: 
+    filename: A6_009_S.tif
+    start_position:
+      - position:
+          x: 448
+          y: 391
