@@ -61,7 +61,7 @@ class Morphology_Measures:
         
         Returns:
             median_angle: double
-                The median of the all bifurcation angles found in the given tree
+                The mean of the all bifurcation angles found in the given tree
             anlges: list 
                 A list with all the bifurcation angles found in the given tree
         """
@@ -123,9 +123,9 @@ class Morphology_Measures:
 
             idx += 1
                 
-        median_angle = np.median(angles)
-        return [median_angle, angles]
-    
+        mean_angle = np.mean(angles)
+        return [mean_angle, angles]
+
 
     @staticmethod
     def tree_length(interp_tree):
@@ -204,31 +204,35 @@ class Morphology_Measures:
 
     @staticmethod
     def tree_scc_circularity(scc_tree):
-        C_m = Morphology_Measures.slope_change_mean(scc_tree)
+        A_m = Morphology_Measures.slope_change_mean(scc_tree)
 
         # obtain the circularity        
         T_c = 0
         for k in range(1, len(scc_tree)):            
-            current = scc_tree[k]
-            if current <= 1:     
-               T_c += abs(current - C_m)            
+            a_i = scc_tree[k]
+            if a_i <= 1:     
+               T_c += abs(a_i - A_m)      
+            # else:
+            #     print("Fuck you {}".format(a_i))
 
-        return T_c
+        norm_circ = T_c / len(scc_tree)
+        return [T_c, norm_circ]
 
     
     @staticmethod
     def tree_scc_circularity_2(scc_tree):
-        C_m = Morphology_Measures.slope_change_mean_2(scc_tree)
+        A_m = Morphology_Measures.slope_change_mean_2(scc_tree)
 
         tree = scc_tree.tree
         # obtain the circularity        
         T_c = 0
         for k in range(1, len(tree)):
-            current = tree[k]
-            if current <= 1:     
-               T_c += abs(current - C_m)
+            a_i = tree[k]
+            if a_i <= 1:     
+               T_c += abs(a_i - A_m)
 
-        return T_c
+        norm_circ = T_c / len(scc_tree)
+        return [T_c, norm_circ]
 
 
     @staticmethod
@@ -274,14 +278,7 @@ class Morphology_Measures:
 
     @staticmethod
     def slope_change_mean(scc_tree):
-        n = 0
-        slope = 0
-        for k in range(1, len(scc_tree)):
-            current = scc_tree[k]
-            if current <= 1:            
-                slope += current
-                n += 1        
-
+        n = len(scc_tree)
         SC_m = 2 / n
         return SC_m
     
