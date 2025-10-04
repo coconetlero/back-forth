@@ -57,7 +57,7 @@ class Morphology_Measures:
     @staticmethod
     def tree_scc_branch_anlge(scc_tree):
         """
-        Finds the bifurcation angle based only on the slope of the chain code of the given tree
+        Finds the bifurcation angle based only on the slope of the chain code of the given binary tree
         
         Returns:
             median_angle: double
@@ -122,6 +122,94 @@ class Morphology_Measures:
                 bifurcations.add(v)
 
             idx += 1
+                
+        mean_angle = np.mean(angles)
+        return [mean_angle, angles]
+
+
+    @staticmethod
+    def tree_scc_branch_anlge_2(scc_tree):
+        """
+        Finds the bifurcation angle based only on the slope of the chain code of the any given tree
+        
+        Returns:
+            median_angle: double
+                The mean of the all bifurcation angles found in the given tree
+            anlges: list 
+                A list with all the bifurcation angles found in the given tree
+        """
+        assert len(scc_tree) > 3, "The length of the input must be contain at least 4 elements."        
+
+        sum_angle = 0
+        scc_branch = {}
+        vertexes = []  
+        current_branch = []    
+        p1 = None
+        p2 = None
+
+        # find coordinates from bifurcations and ending points 
+        for k in range(2, len(scc_tree) - 1):
+            next = scc_tree[k]            
+            if next >= 1:     
+                if next == 1: 
+                    p1 = None
+                    current_branch = []
+                    sum_angle += 1
+                    continue          
+                vertexes.append(next)
+                if not p1:
+                    p1 = next
+                else:
+                    p2 = next
+
+                if p1 and p2:
+                    scc_branch[(p1,p2)] = current_branch
+                    current_branch = []
+                    p1 = p2
+                    p2 = None
+            else:
+                sum_angle += next
+                sum_angle %= 2
+                
+                if p1: 
+                    current_branch.append(sum_angle)
+
+        bifurcations = []
+        for (idx, x) in enumerate(scc_tree):
+            if x > 1:
+                if scc_tree[idx + 1] != 1:
+                    bifurcations.append(x)
+        bifurcations = bifurcations[0:-1]
+
+        # find angles 
+
+        branches = {}
+        b = bifurcations.pop(0)
+        for i in range(len(vertexes)):
+            v = vertexes[i] 
+            if v == b:
+                next = vertexes[i + 1]
+                if next > b:
+                    branches.setdefault(b, []).append((b, next))
+                if len(bifurcations) > 0:
+                    b = bifurcations.pop(0)
+                else:
+                    break   
+
+        angles = []
+        for key in branches:
+            v_branches = branches[key]
+            for i in range(len(v_branches) - 1):
+                b1 = v_branches[i]
+                b2 = v_branches[i + 1]
+                v1 = np.average(np.array(scc_branch[b1]) * 180)
+                v2 = np.average(np.array(scc_branch[b2]) * 180)
+                
+                if np.logical_or(v1 >= 180, v1 <= -180): v1 = np.mod(v1, np.sign(v1) * (-360))
+                if np.logical_or(v2 >= 180, v2 <= -180): v2 = np.mod(v2, np.sign(v2) * (-360))
+                
+                theta = np.mod(v2 - v1, 180)  
+                angles.append(theta)
                 
         mean_angle = np.mean(angles)
         return [mean_angle, angles]

@@ -5,14 +5,6 @@ masurements_csv_file: ../../results/neuron_measurements_v2.csv
 skeleton_images:
 
   - image: 
-    subfolder: du
-    filename: fish01_2.CNG.tif
-    start_position:
-      - position:
-          x: 180
-          y: 385
-
-  - image: 
     subfolder: pushchin
     filename: 010.CNG.tif
     start_position:
@@ -340,13 +332,13 @@ skeleton_images:
           x: 758
           y: 7
 
-  # - image:
-  #   subfolder: bianchi
-  #   filename: AdGoI-neuronD.CNG.tif
-  #   start_position:
-  #     - position:
-  #         x: 1137
-  #         y: 716
+  - image:
+    subfolder: bianchi
+    filename: AdGoI-neuronD.CNG.tif
+    start_position:
+      - position:
+          x: 1137
+          y: 716
 
   - image:
     subfolder: bianchi
@@ -428,7 +420,27 @@ skeleton_images:
           x: 447
           y: 775
   
-  
+  - image: 
+    subfolder: du
+    filename: fish01_2.CNG.tif
+    start_position:
+      - position:
+          x: 265
+          y: 335
 
+  - image: 
+    subfolder: test
+    filename: ex_01.tif
+    start_position:
+      - position:
+          x: 164
+          y: 422
   
+  - image: 
+    subfolder: test
+    filename: ex_02.tif
+    start_position:
+      - position:
+          x: 23
+          y: 122
   

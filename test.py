@@ -291,15 +291,14 @@ def test_paper():
     #             -.75, .06, .06, .06, .06, .06, .06, .06, 1, -.06, -.06, -.06, -.06, -.06, -.06, -.06, -.5, 0, 
     #             0, 0, 0, 0, 0, 0, 0]
     
-    [X, Y] = imscc.plot_tree(scc_tree, dist)
+    # [X, Y] = imscc.plot_tree(scc_tree, dist)
     # imscc.display_tree(scc_tree, dist)
 
 
     bifurcations = SCC_Tree.create_extended_tree_3(scc_tree_o)
     print(bifurcations)
     
-    # [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge(scc_tree)
-    # [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+    [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge_2(scc_tree)
     non_circ = Morphology_Measures.tree_scc_circularity(scc_tree)
     T = TortuosityMeasures.Tree_SCC(scc_tree)    
     M_sc = Morphology_Measures.slope_change_mean(scc_tree)
@@ -456,7 +455,7 @@ def test_tree_class():
     [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
     # imscc.display_tree(scc_tree, dist)
-    [X, Y] = imscc.plot_tree(scc_tree, dist)
+    # [X, Y] = imscc.plot_tree(scc_tree, dist)
 
 
     scc_tree = SCC_Tree(interp_tree)    
@@ -474,7 +473,7 @@ def test_tree_class():
 
 if __name__ == '__main__':
     # test_circle(1)
-    # test_paper()
+    test_paper()
     # test_branch()
     # test_all()
     test_tree_class()
