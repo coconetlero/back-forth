@@ -8,6 +8,7 @@ import yaml
 
 from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline
 from scipy.interpolate import make_interp_spline
+from scipy.signal import savgol_filter
 
 import ImageToSCC as imscc
 from SCC_Tree import SCC_Tree
@@ -27,6 +28,7 @@ def build_local_interpolated_tree(tree_path):
     interp_branches = {}
     interp_tree = [2, 1, tree_path[2]]
 
+    len_vec = []
     for k in range(2, len(tree_path)):
         data = tree_path[k]
 
@@ -39,10 +41,12 @@ def build_local_interpolated_tree(tree_path):
                     p2 = data
             if p1 and p2:
                 if p1 < p2:
-                    bx = np.array([point[1] for point in branch])
-                    by = np.array([point[0] for point in branch])
+                    bx = np.array([point[0] for point in branch])
+                    by = np.array([point[1] for point in branch])
+                    size_vec = round(len(bx) * 0.25)
+                    len_vec.append(size_vec)
                     # D = interp_curve(round(len(bx) * 0.25), by, bx)
-
+                    
                     # Apply smoothing
                     pixel_curve = np.column_stack([bx, by])
 
@@ -50,23 +54,16 @@ def build_local_interpolated_tree(tree_path):
                     # smoothed_curve, tck = smooth_with_splprep(pixel_curve, smoothing_factor=5.0)
                     # smoothed_curve, spline_uni = smooth_with_univariate_spline(pixel_curve, smoothing_factor=12.0)
                     
-                    smoothed_curve, cs = smooth_with_cubic_spline(pixel_curve)
+                    # smoothed_curve, cs = smooth_with_cubic_spline(pixel_curve)
 
-                    plt.figure(figsize=(12, 6))
-                    plt.plot(pixel_curve[:, 0], pixel_curve[:, 1], 'bo-', alpha=0.7, 
-                            markersize=6, label='Original Pixel Curve')
-                    plt.plot(smoothed_curve[:, 0], smoothed_curve[:, 1], 'purple', linewidth=2, 
-                            label='Cubic Spline')
-                    plt.xlabel('X Coordinate')
-                    plt.ylabel('Y Coordinate')
-                    plt.title('Curve Smoothing with Cubic Spline')
-                    plt.legend()
-                    plt.grid(True, alpha=0.3)
-                    plt.show()
+                    smoothed_curve = smooth_with_arc_length(bx, by, 25)
+                    # smoothed_curve = smooth_Savitzky_Golay(bx, by,size_vec, 11, 5)
 
                     smoothed_curve[0] = np.array([bx[0], by[0]])
                     smoothed_curve[-1] = np.array([bx[-1], by[-1]])
                     D = smoothed_curve
+
+                    plot_results(smoothed_curve, pixel_curve)
 
                     interp_branch = [(point[0], point[1]) for point in D]
                     branches[(p1, p2)] = branch
@@ -87,6 +84,7 @@ def build_local_interpolated_tree(tree_path):
         else:
             branch.append(data)
 
+    print("Points on branches: {}".format(len_vec))
     return interp_tree
 
 
@@ -134,6 +132,52 @@ def measure_neuron_tree(config_file, image_filename):
     print("{} \tTort = {} \tAngle = {}".format(im['filename'], T, m_angle))  
 
     return interp_tree    
+
+
+
+def smooth_with_arc_length(x, y, size):
+    # Calculate cumulative arc length
+    dx = np.diff(x)
+    dy = np.diff(y)
+    ds = np.sqrt(dx**2 + dy**2)
+    length = np.sum(ds)
+    ratio = abs(1 - (length / len(dx))) if (length / len(dx)) > 1 else (length / len(dx)) 
+    ratio1 = len(dx) / length 
+    print("Curve ratio: {}".format(ratio))  
+
+    size = round(len(dx) * (ratio)) 
+    s = np.concatenate(([0], np.cumsum(ds)))
+    
+    # Resample to uniform arc length
+    s_uniform = np.linspace(0, s[-1], size)
+    x_uniform = np.interp(s_uniform, s, x)
+    y_uniform = np.interp(s_uniform, s, y)
+    
+    smooth_curve = np.column_stack([x_uniform, y_uniform])
+    return smooth_curve
+
+
+
+
+
+def smooth_Savitzky_Golay(x, y, size, window_length=11, polyorder=3):
+    # Calculate cumulative arc length
+    dx = np.diff(x)
+    dy = np.diff(y)
+    ds = np.sqrt(dx**2 + dy**2)
+    s = np.concatenate(([0], np.cumsum(ds)))
+    
+    # Resample to uniform arc length
+    s_uniform = np.linspace(0, s[-1], size)
+    x_uniform = np.interp(s_uniform, s, x)
+    y_uniform = np.interp(s_uniform, s, y)
+    
+    # Apply S-G filter
+    x_smooth = savgol_filter(x_uniform, window_length, polyorder)
+    y_smooth = savgol_filter(y_uniform, window_length, polyorder)
+    
+    smooth_curve = np.column_stack([x_smooth, y_smooth])
+    return smooth_curve
 
 
 
@@ -264,32 +308,24 @@ def process_pixel_curve(pixel_array, degree=3, return_metrics=True):
 
 
 
-def plot_results(image_pixels, poly_func, metrics):
+def plot_results(smoothed_curve, pixel_curve):
     """
     Plot the results of the polynomial fitting
     """
-    plt.figure(figsize=(12, 6))
-
-    # Plot pixel data with stair-step appearance
-    plt.step(image_pixels[:, 0], image_pixels[:, 1], 's-', 
-             where='mid', color='blue', linewidth=1, markersize=6,
-             label='Pixel Coordinates', alpha=0.7)
-
-    # Plot fitted smooth curve
-    x_smooth = np.linspace(image_pixels[:, 0].min(), image_pixels[:, 0].max(), 100)
-    y_smooth = poly_func(x_smooth)
-    plt.plot(x_smooth, y_smooth, 'r-', linewidth=2, 
-             label=f'Fitted Polynomial (deg=2, R²={metrics["r_squared"]:.3f})')
-
-    plt.xlabel('X Coordinate (pixels)')
-    plt.ylabel('Y Coordinate (pixels)')
-    plt.title('Polynomial Fit to Pixelated Image Curve')
+    plt.figure(figsize=(12, 12))
+    plt.plot(pixel_curve[:, 0], pixel_curve[:, 1], 'bo-', alpha=0.7, markersize=6, label='Original Pixel Curve')
+    plt.plot(smoothed_curve[:, 0], smoothed_curve[:, 1], 'ro-', alpha=0.9, linewidth=2, 
+            label='Cubic Spline')
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('Curve Smoothing with Cubic Spline')
     plt.legend()
     plt.grid(True, alpha=0.3)
+    plt.axis('equal')
     plt.show()
 
 
 
-measure_neuron_tree('neuron_config_2.yaml', 'ex_02.tif')
+measure_neuron_tree('neuron_config_2.yaml', 'ex_01.tif')
 
 
