@@ -7,6 +7,7 @@ import pandas as pd
 import yaml
 
 from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline, make_interp_spline
+from scipy.signal import savgol_filter
 
 import ImageToSCC as imscc
 from SCC_Tree import SCC_Tree
@@ -28,6 +29,7 @@ def build_local_interpolated_tree(tree_path):
     interp_branches = {}
     interp_tree = [2, 1, tree_path[2]]
 
+    len_vec = []
     for k in range(2, len(tree_path)):
         data = tree_path[k]
 
@@ -40,13 +42,15 @@ def build_local_interpolated_tree(tree_path):
                     p2 = data
             if p1 and p2:
                 if p1 < p2:
-                    bx = np.array([point[1] for point in branch])
-                    by = np.array([point[0] for point in branch])
+                    bx = np.array([point[0] for point in branch])
+                    by = np.array([point[1] for point in branch])
+                    size_vec = round(len(bx) * 0.25)
+                    len_vec.append(size_vec)
                     # D = interp_curve(round(len(bx) * 0.25), by, bx)
 
                     # pixel_curve = interp_curve(int(len(bx) * 0.25), bx, by)
                     # pixel_curve = interp_curve(len(bx), bx, by)
-                    
+                                        
                     # Apply smoothing
                     pixel_curve = np.column_stack([bx, by])
                     
@@ -57,6 +61,9 @@ def build_local_interpolated_tree(tree_path):
                     
                     # smoothed_curve, cs = smooth_with_cubic_spline(pixel_curve)
 
+                    smoothed_curve = smooth_with_arc_length(bx, by, 25)
+                    # smoothed_curve = smooth_Savitzky_Golay(bx, by,size_vec, 11, 5)
+
                     smoothed_curve = smooth_with_regularization(pixel_curve, 0.5, 0.5)
                     
                     smoothed_curve[0] = np.array([bx[0], by[0]])
@@ -66,6 +73,8 @@ def build_local_interpolated_tree(tree_path):
 
                     
                     D = smoothed_curve
+
+                    plot_results(smoothed_curve, pixel_curve)
 
                     interp_branch = [(point[0], point[1]) for point in D]
                     branches[(p1, p2)] = branch
@@ -86,6 +95,7 @@ def build_local_interpolated_tree(tree_path):
         else:
             branch.append(data)
 
+    print("Points on branches: {}".format(len_vec))
     return interp_tree
 
 
@@ -127,6 +137,52 @@ def interp_curve(num_points, px, py):
     else:
         return np.array([(px[0], py[0]),(px[-1], py[-1])])
     
+
+
+
+def smooth_with_arc_length(x, y, size):
+    # Calculate cumulative arc length
+    dx = np.diff(x)
+    dy = np.diff(y)
+    ds = np.sqrt(dx**2 + dy**2)
+    length = np.sum(ds)
+    ratio = abs(1 - (length / len(dx))) if (length / len(dx)) > 1 else (length / len(dx)) 
+    ratio1 = len(dx) / length 
+    print("Curve ratio: {}".format(ratio))  
+
+    size = round(len(dx) * (ratio)) 
+    s = np.concatenate(([0], np.cumsum(ds)))
+    
+    # Resample to uniform arc length
+    s_uniform = np.linspace(0, s[-1], size)
+    x_uniform = np.interp(s_uniform, s, x)
+    y_uniform = np.interp(s_uniform, s, y)
+    
+    smooth_curve = np.column_stack([x_uniform, y_uniform])
+    return smooth_curve
+
+
+
+
+
+def smooth_Savitzky_Golay(x, y, size, window_length=11, polyorder=3):
+    # Calculate cumulative arc length
+    dx = np.diff(x)
+    dy = np.diff(y)
+    ds = np.sqrt(dx**2 + dy**2)
+    s = np.concatenate(([0], np.cumsum(ds)))
+    
+    # Resample to uniform arc length
+    s_uniform = np.linspace(0, s[-1], size)
+    x_uniform = np.interp(s_uniform, s, x)
+    y_uniform = np.interp(s_uniform, s, y)
+    
+    # Apply S-G filter
+    x_smooth = savgol_filter(x_uniform, window_length, polyorder)
+    y_smooth = savgol_filter(y_uniform, window_length, polyorder)
+    
+    smooth_curve = np.column_stack([x_smooth, y_smooth])
+    return smooth_curve
 
 
 
