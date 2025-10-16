@@ -6,13 +6,14 @@ import os
 import pandas as pd
 import yaml
 
-from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline, make_interp_spline
 
 import ImageToSCC as imscc
 from SCC_Tree import SCC_Tree
 from Morphology_Measures import Morphology_Measures
 from Tortuosity_Measures import TortuosityMeasures
+
+matplotlib.use('Qt5Agg')
 
 def build_local_interpolated_tree(tree_path):
     """
@@ -43,29 +44,27 @@ def build_local_interpolated_tree(tree_path):
                     by = np.array([point[0] for point in branch])
                     # D = interp_curve(round(len(bx) * 0.25), by, bx)
 
+                    # pixel_curve = interp_curve(int(len(bx) * 0.25), bx, by)
+                    # pixel_curve = interp_curve(len(bx), bx, by)
+                    
                     # Apply smoothing
                     pixel_curve = np.column_stack([bx, by])
-
-
-                    # smoothed_curve, tck = smooth_with_splprep(pixel_curve, smoothing_factor=5.0)
-                    # smoothed_curve, spline_uni = smooth_with_univariate_spline(pixel_curve, smoothing_factor=12.0)
                     
-                    smoothed_curve, cs = smooth_with_cubic_spline(pixel_curve)
 
-                    plt.figure(figsize=(12, 6))
-                    plt.plot(pixel_curve[:, 0], pixel_curve[:, 1], 'bo-', alpha=0.7, 
-                            markersize=6, label='Original Pixel Curve')
-                    plt.plot(smoothed_curve[:, 0], smoothed_curve[:, 1], 'purple', linewidth=2, 
-                            label='Cubic Spline')
-                    plt.xlabel('X Coordinate')
-                    plt.ylabel('Y Coordinate')
-                    plt.title('Curve Smoothing with Cubic Spline')
-                    plt.legend()
-                    plt.grid(True, alpha=0.3)
-                    plt.show()
+                    # smoothed_curve, tck = smooth_with_splprep(pixel_curve, smoothing_factor=8.0)
+                    
+                    # smoothed_curve = smooth_with_univariate_spline(pixel_curve, smoothing_factor=15.0)
+                    
+                    # smoothed_curve, cs = smooth_with_cubic_spline(pixel_curve)
 
+                    smoothed_curve = smooth_with_regularization(pixel_curve, 0.5, 0.5)
+                    
                     smoothed_curve[0] = np.array([bx[0], by[0]])
                     smoothed_curve[-1] = np.array([bx[-1], by[-1]])
+
+                    plot_results(pixel_curve, smoothed_curve)
+
+                    
                     D = smoothed_curve
 
                     interp_branch = [(point[0], point[1]) for point in D]
@@ -90,50 +89,44 @@ def build_local_interpolated_tree(tree_path):
     return interp_tree
 
 
-def measure_neuron_tree(config_file, image_filename):
-    with open(config_file, 'r') as conf_file:
-        config_data = yaml.safe_load(conf_file)
-    im = None
-    images = config_data['skeleton_images']
-    for i, item in enumerate(images):
-        if item['filename'] == image_filename:
-            im = config_data['skeleton_images'][i]
-            break
 
-    im = config_data['skeleton_images'][i]
-    if im['subfolder'] is not None:
-        image_path = os.path.join(config_data["image_folder"], im['subfolder'], im['filename'])
+
+
+def interp_curve(num_points, px, py):
+    if num_points > 1:
+        # equally spaced in arclength
+        N = np.transpose(np.linspace(0, 1, num_points))
+
+        # how many points will be uniformly interpolated?
+        nt = N.size
+
+        # number of points on the curve
+        n = px.size
+        pxy = np.column_stack([px, py])
+        pt = np.zeros((nt, 2))
+
+        # Compute the arclength of each segment.
+        chordlen = (np.sum(np.diff(pxy, axis=0) ** 2, axis=1)) ** (1 / 2)
+        # Normalize the arclengths to a unit total
+        chordlen = chordlen / np.sum(chordlen)
+        # cumulative arclength
+        cumarc = np.append(0, np.cumsum(chordlen))
+
+        tbins = np.digitize(N, cumarc)  # bin index in which each N is in
+
+        # catch any problems at the ends
+        tbins[np.where(np.bitwise_or(tbins <= 0, (N <= 0)))] = 1
+        tbins[np.where(np.bitwise_or(tbins >= n, (N >= 1)))] = n - 1
+
+        s = np.divide((N - cumarc[tbins - 1]), chordlen[tbins - 1])
+        pt = pxy[tbins - 1, :] + np.multiply((pxy[tbins, :] - pxy[tbins - 1, :]), (np.vstack([s] * 2)).T)
+
+        pt[0] = np.array([px[0], py[0]])
+        pt[-1] = np.array([px[-1], py[-1]])
+        return pt
     else:
-        image_path = os.path.join(config_data["image_folder"], im['filename'])
-
-    assert os.path.isfile(image_path), "The image {} doesn't exist".format(image_path)
-
-    start_position = im['start_position'][0]
-    sp = (start_position['position']['y'],start_position['position']['x'])
-
-    o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    treepath = imscc.build_tree(o_image, sp)
-    interp_tree = build_local_interpolated_tree(treepath)
-
-    [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
-
-    # imscc.display_tree(scc_tree, dist)
-    [X, Y] = imscc.plot_tree(scc_tree, dist)
-
-    [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge_2(scc_tree)
-    [T, T_n] = TortuosityMeasures.Tree_SCC(scc_tree)      
-    [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
-    L = Morphology_Measures.tree_length(interp_tree)
+        return np.array([(px[0], py[0]),(px[-1], py[-1])])
     
-    [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
-    [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
-    T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
-    T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
-    [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
-
-    print("{} \tTort = {} \tAngle = {}".format(im['filename'], T, m_angle))  
-
-    return interp_tree    
 
 
 
@@ -141,6 +134,8 @@ def smooth_with_splprep(pixel_curve, smoothing_factor=0.5):
     """
     Smooth using parametric B-spline (handles multi-valued functions)
     """
+
+    size = int(len(pixel_curve[:, 0]) * 0.25)
     # Extract coordinates
     x = pixel_curve[:, 0]
     y = pixel_curve[:, 1]
@@ -152,7 +147,7 @@ def smooth_with_splprep(pixel_curve, smoothing_factor=0.5):
     tck, u = splprep([x, y], s=smoothing_factor * len(x), per=0)
     
     # Generate smooth curve
-    u_new = np.linspace(0, 1, 200)
+    u_new = np.linspace(0, 1, size)
     x_smooth, y_smooth = splev(u_new, tck)
     
     return np.column_stack([x_smooth, y_smooth]), tck
@@ -161,29 +156,32 @@ def smooth_with_splprep(pixel_curve, smoothing_factor=0.5):
 
 def smooth_with_univariate_spline(pixel_curve, smoothing_factor=None):
     """
-    Smooth using UnivariateSpline (works when y is function of x)
+    Smooth x and y separately as functions of arc length
     """
-    # Sort by x-coordinate
-    sorted_indices = np.argsort(pixel_curve[:, 0])
-    x_sorted = pixel_curve[sorted_indices, 0]
-    y_sorted = pixel_curve[sorted_indices, 1]
+
+    size = int(len(pixel_curve[:, 0]) * 0.25)
+
+    # Calculate arc length parameter
+    dx = np.diff(pixel_curve[:, 0])
+    dy = np.diff(pixel_curve[:, 1])
+    ds = np.sqrt(dx**2 + dy**2)
+    s = np.concatenate(([0], np.cumsum(ds)))  # Arc length parameter
     
-    # Remove duplicates for spline fitting
-    unique_mask = np.r_[True, ~np.isclose(np.diff(x_sorted), 0)]
-    x_unique = x_sorted[unique_mask]
-    y_unique = y_sorted[unique_mask]
+    x = pixel_curve[:, 0]
+    y = pixel_curve[:, 1]
     
-    if smoothing_factor is None:
-        smoothing_factor = len(x_unique)
+    # Smooth x and y separately as functions of arc length
+    spline_x = UnivariateSpline(s, x, s=smoothing_factor * len(x))
+    spline_y = UnivariateSpline(s, y, s=smoothing_factor * len(y))
     
-    # Fit spline
-    spline = UnivariateSpline(x_unique, y_unique, s=smoothing_factor)
+    # Generate smooth arc length parameter
+    s_smooth = np.linspace(0, s.max(), size)
     
-    # Generate smooth curve
-    x_smooth = np.linspace(x_unique.min(), x_unique.max(), int(len(pixel_curve[:, 0]) * 0.25))
-    y_smooth = spline(x_smooth)
+    # Get smoothed x and y
+    x_smooth = spline_x(s_smooth)
+    y_smooth = spline_y(s_smooth)
     
-    return np.column_stack([x_smooth, y_smooth]), spline
+    return np.column_stack([x_smooth, y_smooth])
 
 
 
@@ -191,6 +189,9 @@ def smooth_with_cubic_spline(pixel_curve):
     """
     Smooth using CubicSpline interpolation
     """
+
+    size = int(len(pixel_curve[:, 0]) * 0.25)
+
     # Sort by x-coordinate
     sorted_indices = np.argsort(pixel_curve[:, 0])
     x_sorted = pixel_curve[sorted_indices, 0]
@@ -205,11 +206,38 @@ def smooth_with_cubic_spline(pixel_curve):
     cs = CubicSpline(x_unique, y_unique)
     
     # Generate smooth curve
-    x_smooth = np.linspace(x_unique.min(), x_unique.max(), 200)
+    x_smooth = np.linspace(x_unique.min(), x_unique.max(), size)
     y_smooth = cs(x_smooth)
     
     return np.column_stack([x_smooth, y_smooth]), cs
 
+
+
+def smooth_with_regularization(pixel_curve, alpha=0.1, beta=0.1):
+    """
+    Smooth both x and y with curvature regularization
+    """
+    size = int(len(pixel_curve[:, 0]) * 0.25)
+    
+    # Calculate arc length
+    dx = np.diff(pixel_curve[:, 0])
+    dy = np.diff(pixel_curve[:, 1])
+    s = np.concatenate(([0], np.cumsum(np.sqrt(dx**2 + dy**2))))
+    
+    x_orig = pixel_curve[:, 0]
+    y_orig = pixel_curve[:, 1]
+    
+    # Fit smoothing splines to both coordinates
+    # Using different smoothing factors for demonstration
+    spline_x = UnivariateSpline(s, x_orig, s=alpha * len(s))
+    spline_y = UnivariateSpline(s, y_orig, s=beta * len(s))
+    
+    # Generate smooth curve
+    s_smooth = np.linspace(s[0], s[-1], size)
+    x_smooth = spline_x(s_smooth)
+    y_smooth = spline_y(s_smooth)
+    
+    return np.column_stack([x_smooth, y_smooth])
 
 
 def process_pixel_curve(pixel_array, degree=3, return_metrics=True):
@@ -263,33 +291,72 @@ def process_pixel_curve(pixel_array, degree=3, return_metrics=True):
     
 
 
-
-def plot_results(image_pixels, poly_func, metrics):
+def plot_results(pixel_curve, smoothed_curve):
     """
     Plot the results of the polynomial fitting
     """
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 12))
+    plt.plot(pixel_curve[:, 0], pixel_curve[:, 1], 'bo-', alpha=0.4, 
+            markersize=6, label='Original Pixel Curve')
+    plt.plot(smoothed_curve[:, 0], smoothed_curve[:, 1], 'ro-', linewidth=2, 
+            label='Cubic Spline')
 
-    # Plot pixel data with stair-step appearance
-    plt.step(image_pixels[:, 0], image_pixels[:, 1], 's-', 
-             where='mid', color='blue', linewidth=1, markersize=6,
-             label='Pixel Coordinates', alpha=0.7)
-
-    # Plot fitted smooth curve
-    x_smooth = np.linspace(image_pixels[:, 0].min(), image_pixels[:, 0].max(), 100)
-    y_smooth = poly_func(x_smooth)
-    plt.plot(x_smooth, y_smooth, 'r-', linewidth=2, 
-             label=f'Fitted Polynomial (deg=2, R²={metrics["r_squared"]:.3f})')
-
-    plt.xlabel('X Coordinate (pixels)')
-    plt.ylabel('Y Coordinate (pixels)')
-    plt.title('Polynomial Fit to Pixelated Image Curve')
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('Curve Smoothing with Cubic Spline')
     plt.legend()
     plt.grid(True, alpha=0.3)
+    plt.axis('equal')
     plt.show()
 
 
 
-measure_neuron_tree('neuron_config_2.yaml', 'ex_02.tif')
+def measure_neuron_tree(config_file, image_filename):
+    with open(config_file, 'r') as conf_file:
+        config_data = yaml.safe_load(conf_file)
+    im = None
+    images = config_data['skeleton_images']
+    for i, item in enumerate(images):
+        if item['filename'] == image_filename:
+            im = config_data['skeleton_images'][i]
+            break
+
+    im = config_data['skeleton_images'][i]
+    if im['subfolder'] is not None:
+        image_path = os.path.join(config_data["image_folder"], im['subfolder'], im['filename'])
+    else:
+        image_path = os.path.join(config_data["image_folder"], im['filename'])
+
+    assert os.path.isfile(image_path), "The image {} doesn't exist".format(image_path)
+
+    start_position = im['start_position'][0]
+    sp = (start_position['position']['y'],start_position['position']['x'])
+
+    o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    treepath = imscc.build_tree(o_image, sp)
+    interp_tree = build_local_interpolated_tree(treepath)
+
+    [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
+
+    # imscc.display_tree(scc_tree, dist)
+    [X, Y] = imscc.plot_tree(scc_tree, dist)
+
+    [m_angle, t_angles] = Morphology_Measures.tree_scc_branch_anlge_2(scc_tree)
+    [T, T_n] = TortuosityMeasures.Tree_SCC(scc_tree)      
+    [dm_m, dm_st, dm_t] = TortuosityMeasures.DM_Tree(interp_tree)      
+    L = Morphology_Measures.tree_length(interp_tree)
+    
+    [seg, bifur, term] = Morphology_Measures.tree_scc_count_features(scc_tree)
+    [branch_mean_length, branch_sum_length, branch_lengths] = Morphology_Measures.tree_branch_length(interp_tree)
+    T_c = Morphology_Measures.tree_scc_circularity(scc_tree)
+    T_l = Morphology_Measures.tree_scc_linearity(scc_tree)
+    [C, C_m] = Morphology_Measures.convex_concav(scc_tree)
+
+    print("{} \tTort = {} \tTort_norm = {} \tAngle = {}".format(im['filename'], T, T_n, m_angle))  
+
+    return interp_tree    
+
+
+measure_neuron_tree('neuron_config_2.yaml', 'fish01_2.CNG.tif')
 
 

@@ -554,23 +554,27 @@ def get_slope_change(p0, p1, p2):
     return alpha_n 
 
 
-def interp_curve(n, px, py):
-    if n > 1:
+def interp_curve(num_points, px, py):
+    if num_points > 1:
         # equally spaced in arclength
-        N = np.transpose(np.linspace(0, 1, n))
+        N = np.transpose(np.linspace(0, 1, num_points))
 
         # how many points will be uniformly interpolated?
         nt = N.size
 
         # number of points on the curve
         n = px.size
-        pxy = np.array((px, py)).T
-        p1 = pxy[0, :]
-        pend = pxy[-1, :]
-        last_segment = np.linalg.norm(np.subtract(p1, pend))
-        epsilon = 10 * np.finfo(float).eps
+        pxy = np.column_stack([px, py])
+        
+
+        
 
         # IF the two end points are not close enough lets close the curve
+        # p1 = pxy[0, :]
+        # pend = pxy[-1, :]
+        # last_segment = np.linalg.norm(np.subtract(p1, pend))
+        # epsilon = 10 * np.finfo(float).eps
+        #
         # if last_segment > epsilon * np.linalg.norm(np.amax(abs(pxy), axis=0)):
         #     pxy = np.vstack((pxy, p1))
         #     nt = nt + 1
@@ -579,7 +583,7 @@ def interp_curve(n, px, py):
 
         pt = np.zeros((nt, 2))
 
-        # Compute the chordal arclength of each segment.
+        # Compute the arclength of each segment.
         chordlen = (np.sum(np.diff(pxy, axis=0) ** 2, axis=1)) ** (1 / 2)
         # Normalize the arclengths to a unit total
         chordlen = chordlen / np.sum(chordlen)
