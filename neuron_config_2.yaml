@@ -1,4 +1,5 @@
 image_folder: ../data/neuro_morpho/neurons_skeletons/skel/
+image_folder: ../../data/neurons_skeletons/skel/
 masurements_csv_file: ../results/neuron_measurements_v2.csv
 
 

@@ -4,15 +4,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+import re
 import yaml
+
+from typing import Tuple, Optional
 
 from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline, make_interp_spline
 from scipy.signal import savgol_filter
 
 import ImageToSCC as imscc
+import Morphology_Measurements_Single_Curve as measure
+
 from SCC_Tree import SCC_Tree
 from Morphology_Measures import Morphology_Measures
 from Tortuosity_Measures import TortuosityMeasures
+
+
 
 matplotlib.use('Qt5Agg')
 
@@ -61,7 +68,7 @@ def build_local_interpolated_tree(tree_path):
                     
                     # smoothed_curve, cs = smooth_with_cubic_spline(pixel_curve)
 
-                    smoothed_curve = smooth_with_arc_length(bx, by, 25)
+                    # smoothed_curve = smooth_with_arc_length(bx, by, 25)
                     # smoothed_curve = smooth_Savitzky_Golay(bx, by,size_vec, 11, 5)
 
                     smoothed_curve = smooth_with_regularization(pixel_curve, 0.5, 0.5)
@@ -98,7 +105,204 @@ def build_local_interpolated_tree(tree_path):
     print("Points on branches: {}".format(len_vec))
     return interp_tree
 
+def load_tort_file(filename):
+    values = []
+    with open(filename, "r", encoding="utf-8") as f:
+        next(f)
+        for line in f:
+            parts = [p.strip() for p in line.split(",") if p.strip()]  # split by comma, drop blanks
+            if len(parts) >= 2:
+                first_val = float(parts[1])  # first number after filename
+                values.append(first_val)
 
+    return values
+
+
+
+def test_curve_interpolation(path, image_folder, des_file):
+    real_tort = load_tort_file(os.path.join(path, "measurements_curves.csv"))
+
+    pattern = re.compile(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)')
+    pattern_num = re.compile(r"curve_(\d{2})")
+    file_data = []
+    with open(os.path.join(path, des_file), 'r', encoding='utf-8') as f:
+        image_num = -1
+        t1 = -1
+        t2 = -1
+        diffs = np.zeros((50, 2))
+        for line in f:
+            match = pattern.search(line)
+            if match:
+                fname = match.group(1)
+                x = float(match.group(2))
+                y = float(match.group(3))
+                file_data.append({'filename': fname, 'x': x, 'y': y})
+                sp = (int(y), int(x))
+
+                m = pattern_num.search(fname)
+                num = int(m.group(1))
+
+                o_image = cv2.imread(os.path.join(path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
+                treepath = imscc.build_tree(o_image, sp)           
+                
+                # imscc.display_tree(scc_tree, dist)
+                # [X, Y] = imscc.plot_tree(scc_tree, dist)
+                
+                branch = []
+
+                k = 2
+                curve_elem = treepath[k]
+                while type(curve_elem) is tuple:
+                    branch.append(curve_elem)
+                    curve_elem = treepath[k]
+                    k += 1
+                
+                bx = np.array([point[0] for point in branch])
+                by = np.array([point[1] for point in branch])
+
+                if image_num != num:
+                    size_vec = round(len(bx) * 0.3)   
+                                
+                
+                pixel_curve = np.column_stack([bx, by])
+
+                # smoothed_curve = pixel_curve
+                # smoothed_curve = smooth_Savitzky_Golay(bx, by, len(bx), 9, 1) # best -> 9, 1
+                # smoothed_curve = smooth_with_regularization(pixel_curve, 0.055) # best -> 0.054 or 0.057
+                smoothed_curve = smooth_with_univariate_spline(pixel_curve, smoothing_factor=0.057)       # best -> 0.057         
+        
+                ys = smoothed_curve[:, 0]
+                xs = smoothed_curve[:, 1]
+
+                s_eq, x_eq, y_eq, _ = arclength_param(xs, ys, n_samples=size_vec, method="linear")
+                param_curve = np.column_stack([x_eq, y_eq])
+
+
+                plot_results(pixel_curve, param_curve)
+                
+
+                [T, T_n] = measure.SCC(param_curve)      
+                dm = measure.DM(param_curve)     
+                L = measure.ArcLen(param_curve)
+
+                if image_num != num:
+                    # t1 = round(T,4)
+                    t1 = T
+                else:
+                    # t2 = round(T,4)
+                    t2 = T
+                    rt = real_tort[image_num-1]
+                    diffs[image_num-1,:] = (round(abs(rt-t1),4), round(abs(rt-t2),4))
+                    print('{:<3}{},{},{}'.format(num, rt, round(rt-t1,4), round(rt-t2,4)))     
+                # print('{:<18} Tort = {:<10} Tort_N = {:<10} DM = {}'.format(fname, round(T,4), round(T_n,4), round(dm, 4))) 
+
+                image_num = num 
+        print(np.mean(diffs, axis=0))
+
+
+def arclength_param(
+    x, y,
+    spacing: Optional[float] = None,
+    n_samples: Optional[int] = 200,
+    method: str = "linear",
+    smooth_sigma: float = 0.0,
+    closed: bool = False
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Resample a 2D polyline (x,y) onto a uniform arc-length parameter.
+
+    Parameters
+    ----------
+    x, y : array-like
+        Ordered coordinates along the curve.
+    spacing : float, optional
+        Desired step in arc length (same units as x,y). If provided, overrides n_samples.
+    n_samples : int, optional
+        Number of uniformly spaced samples (default 200). Ignored if spacing is given.
+    method : {"linear","cubic"}
+        Interpolation method. "cubic" uses SciPy if available; falls back to linear.
+    smooth_sigma : float
+        Optional Gaussian smoothing (in *samples* along the index), e.g. 1–2 to tame pixel jaggies.
+        0 disables smoothing.
+    closed : bool
+        If True, treat curve as closed (include final segment back to the start during length calc).
+
+    Returns
+    -------
+    s_uniform : (M,) np.ndarray
+        Uniform arc-length parameter from 0 to total length L.
+    x_uniform, y_uniform : (M,) np.ndarray
+        Resampled coordinates at uniform arc-length.
+    s_cum : (N,) np.ndarray
+        Cumulative arc-length of the (possibly smoothed) input polyline.
+    """
+    x = np.asarray(x).ravel()
+    y = np.asarray(y).ravel()
+
+    # Drop NaNs and exact duplicates
+    good = ~(np.isnan(x) | np.isnan(y))
+    x, y = x[good], y[good]
+    if x.size < 2:
+        raise ValueError("Need at least two valid points.")
+
+    keep = np.ones_like(x, dtype=bool)
+    keep[1:] = (np.diff(x) != 0) | (np.diff(y) != 0)
+    x, y = x[keep], y[keep]
+    if x.size < 2:
+        raise ValueError("All points are duplicates.")
+
+    # If closed, append the first point at the end if it's not already there
+    if closed:
+        if x[0] != x[-1] or y[0] != y[-1]:
+            x = np.concatenate([x, x[:1]])
+            y = np.concatenate([y, y[:1]])
+
+    # Optional Gaussian smoothing along the *sequence index*
+    if smooth_sigma and smooth_sigma > 0:
+        r = int(np.ceil(4 * smooth_sigma))
+        t = np.arange(-r, r + 1, dtype=float)
+        g = np.exp(-(t**2) / (2 * smooth_sigma**2))
+        g /= g.sum()
+        mode = "wrap" if closed else "reflect"
+        x = np.convolve(np.pad(x, (r, r), mode), g, mode="valid")
+        y = np.convolve(np.pad(y, (r, r), mode), g, mode="valid")
+
+    # Cumulative arc length
+    ds = np.hypot(np.diff(x), np.diff(y))
+    s_cum = np.concatenate([[0.0], np.cumsum(ds)])
+    L = float(s_cum[-1])
+
+    # Build uniform arc-length grid
+    if spacing is not None:
+        if spacing <= 0:
+            raise ValueError("spacing must be positive.")
+        s_uniform = np.arange(0.0, L, spacing)
+        if s_uniform.size == 0 or s_uniform[-1] < L:
+            s_uniform = np.append(s_uniform, L)
+    else:
+        n = max(2, int(n_samples))
+        s_uniform = np.linspace(0.0, L, n)
+
+    # Interpolation helpers
+    def interp_1d(s, v, su, method):
+        if method == "linear":
+            return np.interp(su, s, v)
+        elif method == "cubic":
+            try:
+                from scipy.interpolate import CubicSpline
+            except Exception:
+                # Fallback to linear if SciPy isn't available
+                return np.interp(su, s, v)
+            # Use natural boundary conditions
+            cs = CubicSpline(s, v, bc_type="natural")
+            return cs(su)
+        else:
+            raise ValueError("method must be 'linear' or 'cubic'.")
+
+    x_uniform = interp_1d(s_cum, x, s_uniform, method)
+    y_uniform = interp_1d(s_cum, y, s_uniform, method)
+
+    return s_uniform, x_uniform, y_uniform, s_cum
 
 
 
@@ -148,7 +352,7 @@ def smooth_with_arc_length(x, y, size):
     length = np.sum(ds)
     ratio = abs(1 - (length / len(dx))) if (length / len(dx)) > 1 else (length / len(dx)) 
     ratio1 = len(dx) / length 
-    print("Curve ratio: {}".format(ratio))  
+    # print("Curve ratio: {}".format(ratio))  
 
     size = round(len(dx) * (ratio)) 
     s = np.concatenate(([0], np.cumsum(ds)))
@@ -269,7 +473,7 @@ def smooth_with_cubic_spline(pixel_curve):
 
 
 
-def smooth_with_regularization(pixel_curve, alpha=0.1, beta=0.1):
+def smooth_with_regularization(pixel_curve, smooth=0.1):
     """
     Smooth both x and y with curvature regularization
     """
@@ -285,8 +489,8 @@ def smooth_with_regularization(pixel_curve, alpha=0.1, beta=0.1):
     
     # Fit smoothing splines to both coordinates
     # Using different smoothing factors for demonstration
-    spline_x = UnivariateSpline(s, x_orig, s=alpha * len(s))
-    spline_y = UnivariateSpline(s, y_orig, s=beta * len(s))
+    spline_x = UnivariateSpline(s, x_orig, s=smooth * len(s))
+    spline_y = UnivariateSpline(s, y_orig, s=smooth * len(s))
     
     # Generate smooth curve
     s_smooth = np.linspace(s[0], s[-1], size)
@@ -352,10 +556,8 @@ def plot_results(pixel_curve, smoothed_curve):
     Plot the results of the polynomial fitting
     """
     plt.figure(figsize=(12, 12))
-    plt.plot(pixel_curve[:, 0], pixel_curve[:, 1], 'bo-', alpha=0.4, 
-            markersize=6, label='Original Pixel Curve')
-    plt.plot(smoothed_curve[:, 0], smoothed_curve[:, 1], 'ro-', linewidth=2, 
-            label='Cubic Spline')
+    plt.plot(pixel_curve[:, 1], pixel_curve[:, 0], 'bo-', alpha=0.4, markersize=6, label='Original Pixel Curve')
+    plt.plot(smoothed_curve[:, 0], smoothed_curve[:, 1], 'ro-', linewidth=2, label='Cubic Spline')
 
     plt.xlabel('X Coordinate')
     plt.ylabel('Y Coordinate')
@@ -413,6 +615,9 @@ def measure_neuron_tree(config_file, image_filename):
     return interp_tree    
 
 
-measure_neuron_tree('neuron_config_2.yaml', 'fish01_2.CNG.tif')
+# measure_neuron_tree('neuron_config_2.yaml', 'fish01_2.CNG.tif')
+
+test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/", "curves", "coordinates_curves.txt")
+
 
 
