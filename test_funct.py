@@ -125,22 +125,29 @@ def test_curve_interpolation(path, image_folder, des_file):
     pattern = re.compile(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)')
     pattern_num = re.compile(r"curve_(\d{2})")
     file_data = []
-    with open(os.path.join(path, des_file), 'r', encoding='utf-8') as f:
-        image_num = -1
-        t1 = -1
-        t2 = -1
-        diffs = np.zeros((50, 2))
+
+    metrics = []
+    with open(os.path.join(path, des_file), 'r', encoding='utf-8') as f:        
+        im_num = 0  
+        row = 0
+        diffs = np.zeros((50, 3))
         for line in f:
-            match = pattern.search(line)
+            new_row = False
+            match = pattern.search(line)            
             if match:
                 fname = match.group(1)
+                m = pattern_num.search(fname)
+
+                # reset metrics counter
+                if im_num != int(m.group(1)):                    
+                    im_num = int(m.group(1))
+                    new_row = True
+
+
                 x = float(match.group(2))
                 y = float(match.group(3))
                 file_data.append({'filename': fname, 'x': x, 'y': y})
                 sp = (int(y), int(x))
-
-                m = pattern_num.search(fname)
-                num = int(m.group(1))
 
                 o_image = cv2.imread(os.path.join(path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
                 treepath = imscc.build_tree(o_image, sp)           
@@ -160,16 +167,15 @@ def test_curve_interpolation(path, image_folder, des_file):
                 bx = np.array([point[0] for point in branch])
                 by = np.array([point[1] for point in branch])
 
-                if image_num != num:
+                if new_row:
                     size_vec = round(len(bx) * 0.3)   
-                                
-                
+                                                
                 pixel_curve = np.column_stack([bx, by])
 
                 # smoothed_curve = pixel_curve
                 # smoothed_curve = smooth_Savitzky_Golay(bx, by, len(bx), 9, 1) # best -> 9, 1
                 # smoothed_curve = smooth_with_regularization(pixel_curve, 0.055) # best -> 0.054 or 0.057
-                smoothed_curve = smooth_with_univariate_spline(pixel_curve, smoothing_factor=0.057)       # best -> 0.057         
+                smoothed_curve = smooth_with_univariate_spline(pixel_curve, smoothing_factor=0.063)       # best -> 0.057         
         
                 ys = smoothed_curve[:, 0]
                 xs = smoothed_curve[:, 1]
@@ -178,26 +184,27 @@ def test_curve_interpolation(path, image_folder, des_file):
                 param_curve = np.column_stack([x_eq, y_eq])
 
 
-                plot_results(pixel_curve, param_curve)
+                # plot_results(pixel_curve, param_curve)
                 
 
                 [T, T_n] = measure.SCC(param_curve)      
                 dm = measure.DM(param_curve)     
                 L = measure.ArcLen(param_curve)
 
-                if image_num != num:
-                    # t1 = round(T,4)
-                    t1 = T
-                else:
-                    # t2 = round(T,4)
-                    t2 = T
-                    rt = real_tort[image_num-1]
-                    diffs[image_num-1,:] = (round(abs(rt-t1),4), round(abs(rt-t2),4))
-                    print('{:<3}{},{},{}'.format(num, rt, round(rt-t1,4), round(rt-t2,4)))     
-                # print('{:<18} Tort = {:<10} Tort_N = {:<10} DM = {}'.format(fname, round(T,4), round(T_n,4), round(dm, 4))) 
+                if new_row and len(metrics) > 1:
+                    rt = real_tort[row]
+                    diffs[row,:] = np.array(metrics) - rt
+                    metrics = []
+                    row += 1 
 
-                image_num = num 
-        print(np.mean(diffs, axis=0))
+
+                metrics.append(T)                
+                
+        rt = real_tort[row]
+        diffs[row,:] = np.array(metrics) - rt 
+        for row, r in enumerate(diffs):
+            print('{:<4}{}'.format(im_num, np.array2string(r, precision=4)))
+        print('{} - all: {:<4}'.format(np.array2string(np.mean(diffs, axis=0), suppress_small=True, precision=4), np.mean(diffs)))
 
 
 def arclength_param(
