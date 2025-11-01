@@ -11,6 +11,7 @@ from typing import Tuple, Optional
 
 from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline, make_interp_spline
 from scipy.signal import savgol_filter
+from scipy.spatial import cKDTree
 
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
@@ -123,24 +124,31 @@ def test_curve_interpolation(path, image_folder, des_file):
     real_tort = load_tort_file(os.path.join(path, "measurements_curves.csv"))
 
     pattern = re.compile(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)')
-    pattern_num = re.compile(r"curve_(\d{2})")
+    pattern_num = re.compile(r"_(\d+)_X(\d+)")
     file_data = []
 
-    metrics = []
+    torts = []
+    dists = []
     with open(os.path.join(path, des_file), 'r', encoding='utf-8') as f:        
         im_num = 0  
         row = 0
-        diffs = np.zeros((50, 3))
+        diffs_tort = np.zeros((50, 3))
+        all_dists = np.zeros((50, 3))
         for line in f:
             new_row = False
-            match = pattern.search(line)            
+            match = pattern.search(line)               
+
             if match:
                 fname = match.group(1)
-                m = pattern_num.search(fname)
 
+                match2 = re.search(r'_(\d+)_X(\d+)', fname)
+                if match2:
+                    file_num = int(match2.group(1))
+                    scale = float(match2.group(2)) / 10.
+                
                 # reset metrics counter
-                if im_num != int(m.group(1)):                    
-                    im_num = int(m.group(1))
+                if im_num != file_num:                    
+                    im_num = file_num
                     new_row = True
 
 
@@ -168,14 +176,14 @@ def test_curve_interpolation(path, image_folder, des_file):
                 by = np.array([point[1] for point in branch])
 
                 if new_row:
-                    size_vec = round(len(bx) * 0.3)   
+                    size_vec = round(len(bx) * 1)   
                                                 
                 pixel_curve = np.column_stack([bx, by])
 
                 # smoothed_curve = pixel_curve
                 # smoothed_curve = smooth_Savitzky_Golay(bx, by, len(bx), 9, 1) # best -> 9, 1
                 # smoothed_curve = smooth_with_regularization(pixel_curve, 0.055) # best -> 0.054 or 0.057
-                smoothed_curve = smooth_with_univariate_spline(pixel_curve, smoothing_factor=0.063)       # best -> 0.057         
+                smoothed_curve = smooth_with_univariate_spline(pixel_curve, smoothing_factor=0.57, num_points=size_vec)       # best -> 0.057         
         
                 ys = smoothed_curve[:, 0]
                 xs = smoothed_curve[:, 1]
@@ -191,20 +199,36 @@ def test_curve_interpolation(path, image_folder, des_file):
                 dm = measure.DM(param_curve)     
                 L = measure.ArcLen(param_curve)
 
-                if new_row and len(metrics) > 1:
+                if new_row and len(torts) > 1:
                     rt = real_tort[row]
-                    diffs[row,:] = np.array(metrics) - rt
-                    metrics = []
+                    diffs_tort[row,:] = np.array(torts) - rt
+                    all_dists[row,:] = dists
+                    torts = []
+                    dists = []
                     row += 1 
 
+                torts.append(T)     
 
-                metrics.append(T)                
+                 # compute the distance between curves                 
+                name, _ = os.path.splitext(fname)                
+                original_curve = read_coordinates(os.path.join(path, "points", name + ".txt")) * scale
+                D = average_min_distance(param_curve, original_curve)
+
+                dists.append(D)       
+
+                # plot_three_curves(original_curve, param_curve, pixel_curve[:, [1, 0]], labels=["Original", "Smoothed", "Reference"])
                 
-        rt = real_tort[row]
-        diffs[row,:] = np.array(metrics) - rt 
-        for row, r in enumerate(diffs):
-            print('{:<4}{}'.format(im_num, np.array2string(r, precision=4)))
-        print('{} - all: {:<4}'.format(np.array2string(np.mean(diffs, axis=0), suppress_small=True, precision=4), np.mean(diffs)))
+                
+        # rt = real_tort[row]
+        # diffs_tort[row,:] = np.array(torts) - rt 
+        for row, r in enumerate(diffs_tort):
+            print('{:<4}{} - {}'.format(im_num, np.array2string(r, precision=4), np.array2string(all_dists[row, :], precision=4)))
+        print('Tort - {} - all: {:.4f} - Dist {} - all: {:.4f}'.format(np.array2string(np.mean(diffs_tort, axis=0), suppress_small=True, precision=4), np.mean(diffs_tort), 
+                                                                       np.array2string(np.mean(all_dists, axis=0), suppress_small=True, precision=4), np.mean(all_dists)))
+
+
+       
+
 
 
 def arclength_param(
@@ -421,12 +445,13 @@ def smooth_with_splprep(pixel_curve, smoothing_factor=0.5):
 
 
 
-def smooth_with_univariate_spline(pixel_curve, smoothing_factor=None):
+def smooth_with_univariate_spline(pixel_curve, smoothing_factor=None, num_points=400):
     """
     Smooth x and y separately as functions of arc length
     """
 
-    size = int(len(pixel_curve[:, 0]) * 0.25)
+    # size = int(len(pixel_curve[:, 0]) * 0.25)
+    size = num_points
 
     # Calculate arc length parameter
     dx = np.diff(pixel_curve[:, 0])
@@ -558,6 +583,47 @@ def process_pixel_curve(pixel_array, degree=3, return_metrics=True):
     
 
 
+def average_min_distance(curve1, curve2):
+    """
+    Computes the average distance from each point in curve1
+    to the nearest point in curve2.
+
+    Parameters:
+        curve1 (np.ndarray): Array of shape (n, 2) with (x, y) points.
+        curve2 (np.ndarray): Array of shape (m, 2) with (x, y) points.
+
+    Returns:
+        float: The average of the minimum distances.
+    """
+    # Build a KD-tree for efficient nearest-neighbor search
+    tree = cKDTree(curve2)
+    
+    # Query the nearest neighbor in curve2 for each point in curve1
+    distances, _ = tree.query(curve1)
+    
+    # Compute and return the mean distance
+    return np.mean(distances)
+
+
+
+def read_coordinates(file_path):
+    """
+    Reads a text file containing comma-separated coordinates (x, y)
+    and returns a NumPy array of shape (n, 2).
+    
+    Parameters:
+        file_path (str): Path to the text file.
+    
+    Returns:
+        np.ndarray: Array containing the (x, y) coordinates.
+    """
+    # Load the file assuming each line has "x,y"
+    coordinates = np.loadtxt(file_path, delimiter=',')
+    return coordinates
+
+
+
+
 def plot_results(pixel_curve, smoothed_curve):
     """
     Plot the results of the polynomial fitting
@@ -572,6 +638,35 @@ def plot_results(pixel_curve, smoothed_curve):
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.axis('equal')
+    plt.show()
+
+
+
+def plot_three_curves(curve1, curve2, curve3, labels=None, title="Three curves"):
+    """
+    Plots three curves, each given as an array of shape (n, 2).
+
+    Parameters:
+        curve1, curve2, curve3 (np.ndarray): Arrays with shape (n, 2) = (x, y).
+        labels (list or tuple, optional): Names for the three curves.
+        title (str): Plot title.
+    """
+    if labels is None:
+        labels = ["Curve 1", "Curve 2", "Curve 3"]
+
+    plt.figure(figsize=(12, 12))
+
+    plt.plot(curve1[:, 0], curve1[:, 1], '-o', markersize=2, label=labels[0])
+    plt.plot(curve2[:, 0], curve2[:, 1], '-o', markersize=2, label=labels[1])
+    plt.plot(curve3[:, 0], curve3[:, 1], '-o', markersize=2, label=labels[2])
+
+    plt.title(title)
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.grid(True, alpha=0.3)
+    plt.axis('equal')
+    plt.legend()
+    plt.tight_layout()
     plt.show()
 
 
@@ -624,7 +719,7 @@ def measure_neuron_tree(config_file, image_filename):
 
 # measure_neuron_tree('neuron_config_2.yaml', 'fish01_2.CNG.tif')
 
-test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/", "curves", "coordinates_curves.txt")
+test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
 
 
 
