@@ -1,5 +1,5 @@
-
 import cv2
+import math
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,13 +9,12 @@ import re
 import time
 import yaml
 
-
+from typing import Tuple, Optional
 
 from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline, make_interp_spline
 from scipy.signal import savgol_filter
 from scipy.spatial import cKDTree
 
-import Smoothing as smooth
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
 
@@ -123,124 +122,12 @@ def load_tort_file(filename):
 
 
 
-def test_curve_interpolation(path, image_folder, des_file):
+def test_curve_interpolation(path, image_folder, des_file, rate=0.25):
     real_tort = load_tort_file(os.path.join(path, "measurements_curves.csv"))
 
     pattern = re.compile(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)')
     pattern_num = re.compile(r"_(\d+)_X(\d+)")
     file_data = []
-
-    torts = []
-    dists = []
-    with open(os.path.join(path, des_file), 'r', encoding='utf-8') as f:        
-        im_num = 0  
-        row = 0
-        diffs_tort = np.zeros((50, 3))
-        all_dists = np.zeros((50, 3))
-        for line in f:
-            new_row = False
-            match = pattern.search(line)               
-
-            if match:
-                fname = match.group(1)
-
-                match2 = re.search(r'_(\d+)_X(\d+)', fname)
-                if match2:
-                    file_num = int(match2.group(1))
-                    scale = float(match2.group(2)) / 10.
-                
-                # reset metrics counter
-                if im_num != file_num:                    
-                    im_num = file_num
-                    new_row = True
-
-
-                x = float(match.group(2))
-                y = float(match.group(3))
-                file_data.append({'filename': fname, 'x': x, 'y': y})
-                sp = (int(y), int(x))
-
-                o_image = cv2.imread(os.path.join(path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
-                treepath = imscc.build_tree(o_image, sp)           
-                
-                # imscc.display_tree(scc_tree, dist)
-                # [X, Y] = imscc.plot_tree(scc_tree, dist)
-                
-                branch = []
-
-                k = 2
-                curve_elem = treepath[k]
-                while type(curve_elem) is tuple:
-                    branch.append(curve_elem)
-                    curve_elem = treepath[k]
-                    k += 1
-                
-                bx = np.array([point[0] for point in branch])
-                by = np.array([point[1] for point in branch])
-
-                if new_row:
-                    size_vec = round(len(bx) * 1)   
-                    svec = round(len(bx) * 0.50) 
-                                                
-                                                           
-                pixel_curve = np.column_stack([bx, by])
-
-                # smoothed_curve = pixel_curve
-                # smoothed_curve = smooth.smooth_Savitzky_Golay(bx, by, len(bx), 3, 1) # best -> 7, 1
-                # smoothed_curve = smooth.smooth_with_regularization(pixel_curve, 0.03) # best -> 0.054 or 0.057
-                # smoothed_curve = smooth.smooth_with_univariate_spline(pixel_curve, smoothing_factor=0.055, num_points=size_vec)       # best -> 0.057       
-
-                pixel_curve = smooth.uniform_resample(pixel_curve, svec)
-                smoothed_curve = smooth.gaussian_smooth(pixel_curve, sigma=0.0, beta=0.2)
-        
-                ys = smoothed_curve[:, 0]
-                xs = smoothed_curve[:, 1]
-
-                param_curve = np.column_stack([xs, ys])
-                # s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(xs, ys, n_samples=size_vec, method="linear")
-                # param_curve = np.column_stack([x_eq, y_eq])
-
-
-                # plot_results(pixel_curve, pixel_curve)
-                
-
-                [T, T_n] = measure.SCC(param_curve)      
-                dm = measure.DM(param_curve)     
-                L = measure.ArcLen(param_curve)
-
-                if new_row and len(torts) > 1:
-                    rt = real_tort[row]
-                    diffs_tort[row,:] = abs(np.array(torts) - rt)
-                    all_dists[row,:] = dists
-                    torts = []
-                    dists = []
-                    row += 1 
-
-                torts.append(T)     
-
-                 # compute the distance between curves                 
-                name, _ = os.path.splitext(fname)                
-                original_curve = read_coordinates(os.path.join(path, "points", name + ".txt")) * scale
-                D = average_min_distance(param_curve, original_curve)
-
-                dists.append(D)       
-
-                # plot_three_curves(original_curve, param_curve, pixel_curve[:, [1, 0]], labels=["Original", "Smoothed", "Pixelated"])                                
-                
-        rt = real_tort[row]
-        diffs_tort[row,:] = abs(np.array(torts) - rt)
-        all_dists[row,:] = dists
-        for row, r in enumerate(diffs_tort):
-            print('{:<4}{} - {}'.format(row, np.array2string(r, precision=4), np.array2string(all_dists[row, :], precision=4)))
-        print('Tort - {} - all: {:.5f} - Dist {} - all: {:.5f}'.format(np.array2string(np.mean(diffs_tort, axis=0), suppress_small=True, precision=4), np.mean(diffs_tort), 
-                                                                       np.array2string(np.mean(all_dists, axis=0), suppress_small=True, precision=4), np.mean(all_dists)))
-
-
-
-def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
-    real_tort = load_tort_file(os.path.join(path, "measurements_curves.csv"))
-
-    pattern = re.compile(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)')
 
     torts = []
     torts_o = []
@@ -266,6 +153,7 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
 
                 x = float(match.group(2))
                 y = float(match.group(3))
+                file_data.append({'filename': fname, 'x': x, 'y': y})
                 sp = (int(y), int(x))
 
                 o_image = cv2.imread(os.path.join(path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
@@ -296,20 +184,34 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                     size_vec = round(len(bx) * rate)   
                                                 
                 pixel_curve = np.column_stack([bx, by])
+                
+
+                # smoothed_curve = pixel_curve
+                # smoothed_curve = smooth_Savitzky_Golay(bx, by, len(bx), 9, 1) # best -> 9, 1
+                # smoothed_curve = smooth_with_regularization(pixel_curve, 0.055) # best -> 0.054 or 0.057
+                # smoothed_curve = smooth_with_univariate_spline(pixel_curve, smoothing_factor=0.05, num_points=size_vec)       # best -> 0.057         
         
 
-                s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(bx, by, n_samples=size_vec, method="linear")
+                s_eq, x_eq, y_eq, _ = arclength_param(bx, by, n_samples=size_vec, method="linear")
                 pixel_param_curve = np.column_stack([x_eq, y_eq])
 
-                # smoothed_curve = pixel_param_curve
                 # smoothed_curve = smooth_Savitzky_Golay(x_eq, y_eq, len(x_eq), 11, 3)
-                smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, 0.01)
+                smoothed_curve = smooth_with_regularization(pixel_param_curve, 0.055)
                 # smoothed_curve = smooth_with_univariate_spline(pixel_param_curve, smoothing_factor=0.047, num_points=size_vec)
 
-                
-                # plot_results(pixel_curve[:, [1, 0]], smoothed_curve[:, [1, 0]])
+
+                xs = smoothed_curve[:, 0]
+                ys = smoothed_curve[:, 1]
+                param_curve = np.column_stack([xs, ys])
+
+                # param_curve = pixel_param_curve
+
+                # s_eq, x_eq, y_eq, _ = arclength_param(xs, ys, n_samples=size_vec, method="linear")
+                # param_curve = np.column_stack([x_eq, y_eq])
 
                 
+                plot_results(pixel_curve[:, [1, 0]], param_curve[:, [1, 0]])
+
 
                 if new_row and len(torts) > 1:                    
                     rt = real_tort[row]
@@ -326,12 +228,12 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                     row += 1 
                 
 
-                [T, T_n] = measure.SCC(smoothed_curve)
+                [T, T_n] = measure.SCC(param_curve)
                 [To, _] = measure.SCC(original_curve)
 
-                dm = measure.DM(smoothed_curve)     
-                L = measure.ArcLen(smoothed_curve)                
-                D = (smooth.average_min_distance(smoothed_curve[:, [1, 0]], original_curve) / scale) / smoothed_curve.shape[0]
+                dm = measure.DM(param_curve)     
+                L = measure.ArcLen(param_curve)                
+                D = average_min_distance(param_curve[:, [1, 0]], original_curve)
 
                 torts.append(T)
                 torts_o.append(To)
@@ -349,12 +251,117 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
         # for row, r in enumerate(diffs_tort):
             # print('{:<4}{} - {}'.format(row, np.array2string(r, precision=4), np.array2string(all_dists[row, :], precision=4)))
         print('Tort - {} - all: {:.4f}, {:.4f} - Dist {} - all: {:.4f}'.format(np.array2string(np.mean(diffs_tort, axis=0), 
-                                                                        suppress_small=True, precision=4), np.mean(diffs_tort), np.mean(np.array(variation)),
-                                                                        np.array2string(np.mean(all_dists, axis=0), suppress_small=True, precision=4), np.mean(all_dists)))
+                                                                                           suppress_small=True, precision=4), np.mean(diffs_tort), np.mean(np.array(variation)),
+                                                                       np.array2string(np.mean(all_dists, axis=0), suppress_small=True, precision=4), np.mean(all_dists)))
+
+
+       
 
 
 
+def arclength_param(
+    x, y,
+    spacing: Optional[float] = None,
+    n_samples: Optional[int] = 200,
+    method: str = "linear",
+    smooth_sigma: float = 0.0,
+    closed: bool = False
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Resample a 2D polyline (x,y) onto a uniform arc-length parameter.
 
+    Parameters
+    ----------
+    x, y : array-like
+        Ordered coordinates along the curve.
+    spacing : float, optional
+        Desired step in arc length (same units as x,y). If provided, overrides n_samples.
+    n_samples : int, optional
+        Number of uniformly spaced samples (default 200). Ignored if spacing is given.
+    method : {"linear","cubic"}
+        Interpolation method. "cubic" uses SciPy if available; falls back to linear.
+    smooth_sigma : float
+        Optional Gaussian smoothing (in *samples* along the index), e.g. 1–2 to tame pixel jaggies.
+        0 disables smoothing.
+    closed : bool
+        If True, treat curve as closed (include final segment back to the start during length calc).
+
+    Returns
+    -------
+    s_uniform : (M,) np.ndarray
+        Uniform arc-length parameter from 0 to total length L.
+    x_uniform, y_uniform : (M,) np.ndarray
+        Resampled coordinates at uniform arc-length.
+    s_cum : (N,) np.ndarray
+        Cumulative arc-length of the (possibly smoothed) input polyline.
+    """
+    x = np.asarray(x).ravel()
+    y = np.asarray(y).ravel()
+
+    # Drop NaNs and exact duplicates
+    good = ~(np.isnan(x) | np.isnan(y))
+    x, y = x[good], y[good]
+    if x.size < 2:
+        raise ValueError("Need at least two valid points.")
+
+    keep = np.ones_like(x, dtype=bool)
+    keep[1:] = (np.diff(x) != 0) | (np.diff(y) != 0)
+    x, y = x[keep], y[keep]
+    if x.size < 2:
+        raise ValueError("All points are duplicates.")
+
+    # If closed, append the first point at the end if it's not already there
+    if closed:
+        if x[0] != x[-1] or y[0] != y[-1]:
+            x = np.concatenate([x, x[:1]])
+            y = np.concatenate([y, y[:1]])
+
+    # Optional Gaussian smoothing along the *sequence index*
+    if smooth_sigma and smooth_sigma > 0:
+        r = int(np.ceil(4 * smooth_sigma))
+        t = np.arange(-r, r + 1, dtype=float)
+        g = np.exp(-(t**2) / (2 * smooth_sigma**2))
+        g /= g.sum()
+        mode = "wrap" if closed else "reflect"
+        x = np.convolve(np.pad(x, (r, r), mode), g, mode="valid")
+        y = np.convolve(np.pad(y, (r, r), mode), g, mode="valid")
+
+    # Cumulative arc length
+    ds = np.hypot(np.diff(x), np.diff(y))
+    s_cum = np.concatenate([[0.0], np.cumsum(ds)])
+    L = float(s_cum[-1])
+
+    # Build uniform arc-length grid
+    if spacing is not None:
+        if spacing <= 0:
+            raise ValueError("spacing must be positive.")
+        s_uniform = np.arange(0.0, L, spacing)
+        if s_uniform.size == 0 or s_uniform[-1] < L:
+            s_uniform = np.append(s_uniform, L)
+    else:
+        n = max(2, int(n_samples))
+        s_uniform = np.linspace(0.0, L, n)
+
+    # Interpolation helpers
+    def interp_1d(s, v, su, method):
+        if method == "linear":
+            return np.interp(su, s, v)
+        elif method == "cubic":
+            try:
+                from scipy.interpolate import CubicSpline
+            except Exception:
+                # Fallback to linear if SciPy isn't available
+                return np.interp(su, s, v)
+            # Use natural boundary conditions
+            cs = CubicSpline(s, v, bc_type="natural")
+            return cs(su)
+        else:
+            raise ValueError("method must be 'linear' or 'cubic'.")
+
+    x_uniform = interp_1d(s_cum, x, s_uniform, method)
+    y_uniform = interp_1d(s_cum, y, s_uniform, method)
+
+    return s_uniform, x_uniform, y_uniform, s_cum
 
 
 
@@ -395,7 +402,6 @@ def interp_curve(num_points, px, py):
     
 
 
-
 def smooth_with_arc_length(x, y, size):
     # Calculate cumulative arc length
     dx = np.diff(x)
@@ -419,9 +425,24 @@ def smooth_with_arc_length(x, y, size):
 
 
 
-
-
-
+def smooth_Savitzky_Golay(x, y, size, window_length=11, polyorder=3):
+    # Calculate cumulative arc length
+    dx = np.diff(x)
+    dy = np.diff(y)
+    ds = np.sqrt(dx**2 + dy**2)
+    s = np.concatenate(([0], np.cumsum(ds)))
+    
+    # Resample to uniform arc length
+    s_uniform = np.linspace(0, s[-1], size)
+    x_uniform = np.interp(s_uniform, s, x)
+    y_uniform = np.interp(s_uniform, s, y)
+    
+    # Apply S-G filter
+    x_smooth = savgol_filter(x_uniform, window_length, polyorder)
+    y_smooth = savgol_filter(y_uniform, window_length, polyorder)
+    
+    smooth_curve = np.column_stack([x_smooth, y_smooth])
+    return smooth_curve
 
 
 
@@ -449,7 +470,35 @@ def smooth_with_splprep(pixel_curve, smoothing_factor=0.5):
 
 
 
+def smooth_with_univariate_spline(pixel_curve, smoothing_factor=None, num_points=400):
+    """
+    Smooth x and y separately as functions of arc length
+    """
 
+    # size = int(len(pixel_curve[:, 0]) * 0.25)
+    size = num_points
+
+    # Calculate arc length parameter
+    dx = np.diff(pixel_curve[:, 0])
+    dy = np.diff(pixel_curve[:, 1])
+    ds = np.sqrt(dx**2 + dy**2)
+    s = np.concatenate(([0], np.cumsum(ds)))  # Arc length parameter
+    
+    x = pixel_curve[:, 0]
+    y = pixel_curve[:, 1]
+    
+    # Smooth x and y separately as functions of arc length
+    spline_x = UnivariateSpline(s, x, s=smoothing_factor * len(x))
+    spline_y = UnivariateSpline(s, y, s=smoothing_factor * len(y))
+    
+    # Generate smooth arc length parameter
+    s_smooth = np.linspace(0, s.max(), size)
+    
+    # Get smoothed x and y
+    x_smooth = spline_x(s_smooth)
+    y_smooth = spline_y(s_smooth)
+    
+    return np.column_stack([x_smooth, y_smooth])
 
 
 
@@ -481,6 +530,32 @@ def smooth_with_cubic_spline(pixel_curve):
 
 
 
+def smooth_with_regularization(pixel_curve, smooth=0.1):
+    """
+    Smooth both x and y with curvature regularization
+    """
+    # size = int(len(pixel_curve[:, 0]) * 0.25)
+    size = pixel_curve.shape[0]
+    
+    # Calculate arc length
+    dx = np.diff(pixel_curve[:, 0])
+    dy = np.diff(pixel_curve[:, 1])
+    s = np.concatenate(([0], np.cumsum(np.sqrt(dx**2 + dy**2))))
+    
+    x_orig = pixel_curve[:, 0]
+    y_orig = pixel_curve[:, 1]
+    
+    # Fit smoothing splines to both coordinates
+    # Using different smoothing factors for demonstration
+    spline_x = UnivariateSpline(s, x_orig, s=smooth * len(s))
+    spline_y = UnivariateSpline(s, y_orig, s=smooth * len(s))
+    
+    # Generate smooth curve
+    s_smooth = np.linspace(s[0], s[-1], size)
+    x_smooth = spline_x(s_smooth)
+    y_smooth = spline_y(s_smooth)
+    
+    return np.column_stack([x_smooth, y_smooth])
 
 
 
@@ -535,7 +610,26 @@ def process_pixel_curve(pixel_array, degree=3, return_metrics=True):
     
 
 
+def average_min_distance(curve1, curve2):
+    """
+    Computes the average distance from each point in curve1
+    to the nearest point in curve2.
 
+    Parameters:
+        curve1 (np.ndarray): Array of shape (n, 2) with (x, y) points.
+        curve2 (np.ndarray): Array of shape (m, 2) with (x, y) points.
+
+    Returns:
+        float: The average of the minimum distances.
+    """
+    # Build a KD-tree for efficient nearest-neighbor search
+    tree = cKDTree(curve2)
+    
+    # Query the nearest neighbor in curve2 for each point in curve1
+    distances, _ = tree.query(curve1, k=1)
+    
+    # Compute and return the mean distance
+    return np.mean(distances)
 
 
 
@@ -556,7 +650,6 @@ def read_coordinates(file_path):
 
 
 
-
 def plot_results(curve1, curve2):
     """
     Plot the results of the polynomial fitting
@@ -564,7 +657,6 @@ def plot_results(curve1, curve2):
     plt.figure(figsize=(12, 12))
     plt.plot(curve1[:, 0], curve1[:, 1], 'bo-', alpha=0.3, markersize=2, linewidth=1, label='Original')
     plt.plot(curve2[:, 0], curve2[:, 1], 'ro-', alpha=0.8, markersize=2, linewidth=1, label='Smoothed')
-
 
     plt.xlabel('X Coordinate')
     plt.ylabel('Y Coordinate')
@@ -651,22 +743,19 @@ def measure_neuron_tree(config_file, image_filename):
     return interp_tree    
 
 
-
 # measure_neuron_tree('neuron_config_2.yaml', 'fish01_2.CNG.tif')
-
-# test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
 
 
 start_time = time.perf_counter()
 
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
-test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
+test_curve_interpolation('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
 
 
 # for r in [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55]:
 #     print("---- Rate: {} ----".format(r))
-#     test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=r)
+#     test_curve_interpolation('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=r)
 
 end_time = time.perf_counter()
-
+print(f"Execution time: {end_time - start_time:.6f} seconds") 
 
