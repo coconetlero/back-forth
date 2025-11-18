@@ -2,6 +2,7 @@ import os
 import random
 import re
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 
 import Smoothing as smooth
@@ -124,7 +125,7 @@ def optimize_w_for_input(
     Minimize J(x, w) = a*u(x, w) + b*v(x, w) over w using Bayesian optimization.
 
     Args:
-        x: input for this run, shape (2, n) for example
+        x: input for this run, shape (2, n) for example (curve vector)
         metrics_fn: function (x, w) -> (u, v)  (two real-valued metrics)
         a, b: weights in J = a*u + b*v
         bounds: Bounds for w (dim = 2 here)
@@ -136,8 +137,8 @@ def optimize_w_for_input(
     Returns:
         best_w: (2,) optimal parameters found
         best_J: float, minimal J(x, w)
-        best_u: float, u(x, best_w)
-        best_v: float, v(x, best_w)
+        best_u: float, u(x, best_w) u -> amount of points in the curve (%)
+        best_v: float, v(x, best_w) v -> smoothing value
     """
     # We will MAXIMIZE -J, since our EI is for maximization.
 
@@ -197,9 +198,9 @@ def optimize_w_for_input(
 
     if verbose:
         print("\n=== Optimization finished ===")
-        print(f"Best J = {best_J:.4f} (min)")
-        print(f"Best u = {best_u:.4f}, v = {best_v:.4f}")
-        print(f"Best w = {best_w}")
+        # print(f"Best J = {best_J:.4f} (min)")
+        # print(f"Best u = {best_u:.4f}, v = {best_v:.4f}")
+        # print(f"Best w = {best_w}")
 
     return best_w, best_J, best_u, best_v
 
@@ -248,7 +249,11 @@ def get_random_curve(path, image_folder, des_file) -> np.ndarray:
                 by = np.array([point[1] for point in branch])
 
                 pixel_curve = np.column_stack([bx, by])
-                return [pixel_curve, scale]
+                return [fname, pixel_curve, original_curve, scale]
+
+
+
+
 
 
 
@@ -256,24 +261,46 @@ def get_random_curve(path, image_folder, des_file) -> np.ndarray:
 # Example usage / template
 # ============================
 if __name__ == "__main__":
-    # Example: x is shape (2, n)
-    n = 10
-    [random_curve, scale] = get_random_curve('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
+   
+    # ============================
+    # Plotting helper
+    # ============================
+    def plot_results(curve1, curve2):
+        """
+        Plot the results of the polynomial fitting
+        """
+        plt.figure(figsize=(12, 12))
+        plt.plot(curve1[:, 0], curve1[:, 1], 'bo-', alpha=0.3, markersize=2, linewidth=1, label='Original')
+        plt.plot(curve2[:, 0], curve2[:, 1], 'ro-', alpha=0.8, markersize=2, linewidth=1, label='Smoothed')
+
+
+        plt.xlabel('X Coordinate')
+        plt.ylabel('Y Coordinate')
+        plt.title('Curve Smoothing with Cubic Spline')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.axis('equal')
+        plt.show()
+
 
 
     def smoothing_metrics(scale_original_curve: dict, w: np.ndarray) -> Tuple[float, float]:
         # x: (2, n)
-        # w: (2,)
+        # w: (2,)    
 
-        original_curve = scale_original_curve["x"]
+        pixel_curve = scale_original_curve["test"]
+        original_curve = scale_original_curve["original"]
         scale = scale_original_curve["scale"]
 
-        size_vec = round(original_curve.shape[0] * w[0])  
-        bx = original_curve[:,0]
-        by = original_curve[:,1]
+        w1, w2 = w
+        size_vec = round(pixel_curve.shape[0] * w1)  
+        bx = pixel_curve[:,0]
+        by = pixel_curve[:,1]
         s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(bx, by, n_samples=size_vec, method="linear")
         pixel_param_curve = np.column_stack([x_eq, y_eq])
-        smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, w[1])
+        smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, w2)
+
+        # plot_results(original_curve, smoothed_curve[:, [1, 0]])
 
         [To, _] = measure.SCC(original_curve)
         [T, _] = measure.SCC(smoothed_curve)
@@ -283,36 +310,124 @@ if __name__ == "__main__":
         return float(Td), float(D)
 
     
-    # Define weights a, b
-    a = 0.5
-    b = 0.5
 
-    # Bounds for w = [w1, w2]
-    lows = np.array([0.1, 0.01], dtype=float)
-    highs = np.array([1.0, 0.2], dtype=float) 
-    bounds = Bounds(lows=lows, highs=highs)
+    # [random_curve, scale] = get_random_curve('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
+    # [curve_name, random_curve, original_curve, scale] = get_random_curve('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt")
 
-    scale_random_curve = {
-        "x": random_curve,
-        "scale": scale 
-    }
+    def obtain_best_params_for_all(path, image_folder, des_file):        
+        names = []
+        torts = []        
+        dists = []
+        params = []
+        with open(os.path.join(path, des_file), 'r', encoding='utf-8') as f:        
+            for idx, line in enumerate(f):            
+                match1 = re.search(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)', line)               
+                if match1:
+                    fname = match1.group(1)                    
+                    x = float(match1.group(2))
+                    y = float(match1.group(3))
 
-    best_w, best_J, best_u, best_v = optimize_w_for_input(
-        x=scale_random_curve,
-        metrics_fn=smoothing_metrics,
-        a=a,
-        b=b,
-        bounds=bounds,
-        n_init=5,
-        n_iter=20,
-        n_candidates=500,
-        verbose=True,
-    )
+                match2 = re.search(r'_(\d+)_X(\d+)', fname)
+                if match2:
+                    scale = float(match2.group(2)) / 10.
+                    
+                # load original curve (spline generated)
+                name, _ = os.path.splitext(fname)                
+                original_curve = np.loadtxt(os.path.join(path, "points", name + ".txt"), delimiter=',')
+                original_curve *= scale
+                
+                # start position
+                sp = (int(y), int(x))
 
-    print("\nFinal best_w:", best_w)
-    print("Final best_J:", best_J)
-    print("Final best_u:", best_u)
-    print("Final best_v:", best_v)
+                # get curve from image
+                o_image = cv2.imread(os.path.join(path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
+                treepath = imscc.build_tree(o_image, sp)                                           
+
+                k = 2
+                branch = []
+                curve_elem = treepath[k]
+                while type(curve_elem) is tuple:
+                    branch.append(curve_elem)
+                    curve_elem = treepath[k]
+                    k += 1
+                
+                bx = np.array([point[0] for point in branch])
+                by = np.array([point[1] for point in branch])
+                pixel_curve = np.column_stack([bx, by])
+                                
+                a = 0.5
+                b = 0.5
+                interations = 30
+
+                # Bounds for w = [w1, w2]
+                lows = np.array([0.1, 0.01], dtype=float)
+                highs = np.array([1.0, 0.2], dtype=float) 
+                bounds = Bounds(lows=lows, highs=highs)
+
+                scale_random_curve = {
+                    "test": pixel_curve,
+                    "original": original_curve,
+                    "scale": scale 
+                }
+
+                best_w, best_J, best_u, best_v = optimize_w_for_input(
+                    x=scale_random_curve,
+                    metrics_fn=smoothing_metrics,
+                    a=a,
+                    b=b,
+                    bounds=bounds,
+                    n_init=5,
+                    n_iter=interations,
+                    n_candidates=500,
+                    verbose=False,
+                )
+
+                names.append(fname)
+                torts.append(best_u)
+                dists.append(best_v)
+                params.append(best_w)
+
+        for idx in range(len(names)):
+            print('{:<4}, {}, {}, {:.4f}, {:.4f}'.format(idx, names[idx], np.array2string(np.array(params[idx]), precision=4), torts[idx], dists[idx]))
+
+
+
+    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt")
+
+
+
+    # # Define weights a, b
+    # a = 0.5
+    # b = 0.5
+
+    # # Bounds for w = [w1, w2]
+    # lows = np.array([0.1, 0.01], dtype=float)
+    # highs = np.array([1.0, 0.2], dtype=float) 
+    # bounds = Bounds(lows=lows, highs=highs)
+
+    # scale_random_curve = {
+    #     "test": random_curve,
+    #     "original": original_curve,
+    #     "scale": scale 
+    # }
+
+    # best_w, best_J, best_u, best_v = optimize_w_for_input(
+    #     x=scale_random_curve,
+    #     metrics_fn=smoothing_metrics,
+    #     a=a,
+    #     b=b,
+    #     bounds=bounds,
+    #     n_init=5,
+    #     n_iter=25,
+    #     n_candidates=500,
+    #     verbose=False,
+    # )
+
+    # print('\nCurve name:', curve_name)
+    # print("\nFinal best_w:", best_w)
+    # print("Final best_J:", best_J)
+    # print("Final best Tort diff:", best_u)
+    # print("Final best Distance:", best_v)
 
 
 

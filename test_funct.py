@@ -303,7 +303,7 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
 
                 # smoothed_curve = pixel_param_curve
                 # smoothed_curve = smooth_Savitzky_Golay(x_eq, y_eq, len(x_eq), 11, 3)
-                smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, 0.01)
+                smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, 0.057)
                 # smoothed_curve = smooth_with_univariate_spline(pixel_param_curve, smoothing_factor=0.047, num_points=size_vec)
 
                 
@@ -316,7 +316,7 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                     diffs_tort[row,:] = np.abs(np.array(torts) - np.array(torts_o))
                     all_dists[row,:] = dists
                     variation.append(np.std(np.array(torts)) / np.mean(np.array(torts)))
-                    print('{:<4} {:.4f}  {}  {:.4f} - {} - {}'.format(row, To,
+                    print('{:<4} {:<20} {:.4f}  {}  {:.4f} - {} - {}'.format(row, fname, To,
                                                               np.array2string(np.array(torts), precision=4), variation[-1],
                                                               np.array2string(diffs_tort[row,:], precision=4), 
                                                               np.array2string(np.array(dists), precision=4)))
@@ -355,6 +355,62 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
 
 
 
+def test_curve_smoothing_all(path, image_folder, des_file, rate=0.25):
+    torts = []
+    torts_o = []
+    dists = []
+    variation = []
+
+    with open(os.path.join(path, des_file), 'r', encoding='utf-8') as f:        
+        im_num = 0  
+        row = 0
+        diffs_tort = np.zeros((50, 3))
+        all_dists = np.zeros((50, 3))
+        for idx, line in enumerate(f):            
+            match1 = re.search(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)', line)               
+            if match1:
+                fname = match1.group(1)
+
+                match2 = re.search(r'_(\d+)_X(\d+)', fname)
+                if match2:
+                    scale = float(match2.group(2)) / 10.
+                
+
+                x = float(match1.group(2))
+                y = float(match1.group(3))
+                sp = (int(y), int(x))
+
+                o_image = cv2.imread(os.path.join(path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
+                treepath = imscc.build_tree(o_image, sp)           
+                
+                name, _ = os.path.splitext(fname)                
+                original_curve = read_coordinates(os.path.join(path, "points", name + ".txt")) * scale
+                branch = []
+
+                k = 2
+                curve_elem = treepath[k]
+                while type(curve_elem) is tuple:
+                    branch.append(curve_elem)
+                    curve_elem = treepath[k]
+                    k += 1
+                
+                bx = np.array([point[0] for point in branch])
+                by = np.array([point[1] for point in branch])
+                size_vec = round(len(bx) * rate)   
+                                                
+                # pixel_curve = np.column_stack([bx, by])
+        
+                s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(bx, by, n_samples=size_vec, method="linear")
+                pixel_param_curve = np.column_stack([x_eq, y_eq])
+
+                smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, 0.057)
+                [To, _] = measure.SCC(original_curve)
+                [T, _] = measure.SCC(smoothed_curve)
+        
+                Td = abs(To - T)
+                D = D = (smooth.average_min_distance(smoothed_curve[:, [1, 0]], original_curve) / scale) / smoothed_curve.shape[0]
+
+                print('{:<4} {:<20} {:.4f}  {:.4f}  {:.4f}'.format(idx, fname, To, Td, D))
 
 
 
@@ -660,7 +716,9 @@ def measure_neuron_tree(config_file, image_filename):
 start_time = time.perf_counter()
 
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
-test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
+# test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
+# test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
+test_curve_smoothing_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
 
 
 # for r in [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55]:
