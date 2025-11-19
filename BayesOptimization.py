@@ -1,9 +1,10 @@
-import os
-import random
-import re
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+import re
+import os
+import time
 
 import Smoothing as smooth
 import ImageToSCC as imscc
@@ -391,9 +392,13 @@ if __name__ == "__main__":
             print('{:<4}, {}, {}, {:.4f}, {:.4f}'.format(idx, names[idx], np.array2string(np.array(params[idx]), precision=4), torts[idx], dists[idx]))
 
 
+    start_time = time.perf_counter()
 
-    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt")
+    obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
+    # obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt")
 
+    end_time = time.perf_counter()
+    print(f"Execution time: {end_time - start_time:.6f} seconds") 
 
 
     # # Define weights a, b

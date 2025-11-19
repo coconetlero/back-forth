@@ -15,6 +15,7 @@ from scipy.interpolate import splprep, splev, UnivariateSpline, CubicSpline, mak
 from scipy.signal import savgol_filter
 from scipy.spatial import cKDTree
 
+import Curve_utils as cutils
 import Smoothing as smooth
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
@@ -296,6 +297,9 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                     size_vec = round(len(bx) * rate)   
                                                 
                 pixel_curve = np.column_stack([bx, by])
+
+
+                pixel_curve_2 =  cutils.from_cont_to_discrete_curve(original_curve)
         
 
                 s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(bx, by, n_samples=size_vec, method="linear")
