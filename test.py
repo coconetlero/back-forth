@@ -9,7 +9,7 @@ import yaml
 
 import ImageToSCC as imscc
 
-from SCC_Tree import SCC_Tree
+from SCC_Tree_old import SCC_Tree
 from Morphology_Measures import Morphology_Measures
 from Tortuosity_Measures import TortuosityMeasures
 
@@ -255,7 +255,7 @@ def test_circle(r):
     non_circ = Morphology_Measures.curve_scc_circularity(scc_curve)
 
     print("SCC = {}".format(SCC))
-    print("Circ = {}".format(non_circ))
+    print("non Circ = {}".format(non_circ))
     plot_segment(Xa, Ya)
 
 
@@ -291,7 +291,7 @@ def test_paper():
     #             -.75, .06, .06, .06, .06, .06, .06, .06, 1, -.06, -.06, -.06, -.06, -.06, -.06, -.06, -.5, 0, 
     #             0, 0, 0, 0, 0, 0, 0]
     
-    # [X, Y] = imscc.plot_tree(scc_tree, dist)
+    [X, Y] = imscc.plot_tree(scc_tree, dist)
     # imscc.display_tree(scc_tree, dist)
 
 
@@ -473,10 +473,10 @@ def test_tree_class():
 
 if __name__ == '__main__':
     # test_circle(1)
-    test_paper()
-    # test_branch()
+    # test_paper()
+    test_branch()
     # test_all()
-    test_tree_class()
+    # test_tree_class()
     # test_bifurcation_finding_2()
 
     

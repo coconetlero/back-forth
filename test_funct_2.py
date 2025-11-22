@@ -18,7 +18,7 @@ from scipy.spatial import cKDTree
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
 
-from SCC_Tree import SCC_Tree
+from SCC_Tree_old import SCC_Tree
 from Morphology_Measures import Morphology_Measures
 from Tortuosity_Measures import TortuosityMeasures
 

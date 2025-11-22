@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-import SCC_Tree
+import SCC_Tree_old
 
 from Tortuosity_Measures import TortuosityMeasures
 
