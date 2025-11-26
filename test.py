@@ -474,9 +474,9 @@ def test_tree_class():
 if __name__ == '__main__':
     # test_circle(1)
     # test_paper()
-    test_branch()
+    # test_branch()
     # test_all()
-    # test_tree_class()
+    test_tree_class()
     # test_bifurcation_finding_2()
 
     

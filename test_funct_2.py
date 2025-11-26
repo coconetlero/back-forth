@@ -749,7 +749,7 @@ def measure_neuron_tree(config_file, image_filename):
 start_time = time.perf_counter()
 
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
-test_curve_interpolation('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
+# test_curve_interpolation('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
 
 
 # for r in [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55]:
