@@ -22,10 +22,6 @@ import numpy as np
 from typing import Callable, Tuple, List
 from dataclasses import dataclass
 
-from scipy.stats import norm
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel
-
 
 # ============================
 # Bounds helper
@@ -394,8 +390,8 @@ if __name__ == "__main__":
 
     start_time = time.perf_counter()
 
-    obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
-    # obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt")
+    # obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
+    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_200_5', "images", "coordinates_curves.txt")
 
     end_time = time.perf_counter()
     print(f"Execution time: {end_time - start_time:.6f} seconds") 

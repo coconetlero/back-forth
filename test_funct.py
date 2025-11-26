@@ -296,11 +296,7 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                 if new_row:
                     size_vec = round(len(bx) * rate)   
                                                 
-                pixel_curve = np.column_stack([bx, by])
-
-
-                pixel_curve_2 =  cutils.from_cont_to_discrete_curve(original_curve)
-        
+                pixel_curve = np.column_stack([bx, by])        
 
                 s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(bx, by, n_samples=size_vec, method="linear")
                 pixel_param_curve = np.column_stack([x_eq, y_eq])
@@ -329,7 +325,6 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                     dists = []
                     row += 1 
                 
-
                 [T, T_n] = measure.SCC(smoothed_curve)
                 [To, _] = measure.SCC(original_curve)
 
@@ -344,7 +339,7 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                      
 
                 # plot_three_curves(original_curve, param_curve, pixel_curve[:, [1, 0]], labels=["Original", "Smoothed", "Reference"])
-                # plot_three_curves(original_curve, pixel_param_curve[:, [1, 0]], pixel_curve[:, [1, 0]], labels=["Original", "Smoothed", "Reference"])
+                # plot_three_curves(original_curve, pixel_curve_2[:, [1, 0]], pixel_curve[:, [1, 0]], labels=["Original", "Smoothed", "Reference"])
                 
                 
         rt = real_tort[row]
@@ -721,7 +716,7 @@ start_time = time.perf_counter()
 
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
 # test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
-# test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
+test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
 # test_curve_smoothing_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
 
 

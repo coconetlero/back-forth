@@ -5,12 +5,12 @@ import numpy as np
 def from_cont_to_discrete_curve(curve):
     X = curve[:,0]
     Y = curve[:,1]
-    px = []
-    py = []
+    px = [round(X[0])]
+    py = [round(Y[0])]
 
     for x_i1, x_i2, y_i1, y_i2 in zip(X, X[1:], Y, Y[1:]):
-        v1 = np.array(x_i1, y_i1)
-        v2 = np.array(x_i2, y_i2)   
+        v1 = np.array([x_i1, y_i1])
+        v2 = np.array([x_i2, y_i2])   
         distance = np.linalg.norm(v2 - v1)
 
         if distance > math.sqrt(2):
