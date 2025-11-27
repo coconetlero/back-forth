@@ -73,6 +73,17 @@ def tree_traversal(image, root, max_distance):
 
 
 def build_tree(_image, root):
+    """ 
+    Form an image containing a skeletonized tree, return a position (x,y) list result of a hamiltonian traverse of the tree with bifurcations and 
+    terminal vertexes marked.
+
+    Args:
+        _image (numpy.array): representing a BW image with a skeletonized tree in white pixels (255)
+        root (_type_): the (y,x) position of a terminal vertex where the treaverse begins 
+
+    Returns:
+        _type_: _description_
+    """
     image = np.array(_image)
     cp = root  # moving Position
     p_idx = 0
@@ -124,10 +135,13 @@ def build_tree(_image, root):
 
 
 def build_interpolated_tree(tree_path):
-    """
+    """_summary_
 
-    :param tree_path:
-    :return:
+    Args:
+        tree_path (_type_): _description_
+
+    Returns:
+        _type_: _description_
     """
     p1 = 2
     p2 = 0
