@@ -6,7 +6,7 @@ import re
 import os
 import time
 
-import Smoothing as smooth
+import utils.Smoothing as smooth
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
 
