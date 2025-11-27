@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+
+
 from typing import Tuple, Optional
 from scipy.interpolate import UnivariateSpline
 from scipy.ndimage import gaussian_filter1d
@@ -31,42 +33,14 @@ def smooth_Savitzky_Golay(x, y, size, window_length=11, polyorder=3):
 
 
 
-def smooth_with_regularization(pixel_curve, smooth=0.1):
-    """
-    Smooth both x and y with curvature regularization
-    """
-    # size = int(len(pixel_curve[:, 0]) * 0.25)
-    size = pixel_curve.shape[0]
-    
-    # Calculate arc length
-    dx = np.diff(pixel_curve[:, 0])
-    dy = np.diff(pixel_curve[:, 1])
-    s = np.concatenate(([0], np.cumsum(np.sqrt(dx**2 + dy**2))))
-    
-    x_orig = pixel_curve[:, 0]
-    y_orig = pixel_curve[:, 1]
-    
-    # Fit smoothing splines to both coordinates
-    # Using different smoothing factors for demonstration
-    spline_x = UnivariateSpline(s, x_orig, s=smooth * len(s))
-    spline_y = UnivariateSpline(s, y_orig, s=smooth * len(s))
-    
-    # Generate smooth curve
-    s_smooth = np.linspace(s[0], s[-1], size)
-    x_smooth = spline_x(s_smooth)
-    y_smooth = spline_y(s_smooth)
-    
-    return np.column_stack([x_smooth, y_smooth])
 
-
-
-def smooth_with_univariate_spline(pixel_curve, smoothing_factor=None, num_points=400):
+def smooth_with_univariate_spline(pixel_curve, smoothing_factor=1.1, num_points=400):
     """
     Smooth x and y separately as functions of arc length
     """
 
     # size = int(len(pixel_curve[:, 0]) * 0.25)
-    size = num_points
+    size = pixel_curve.shape[0] if num_points is 0 else num_points
 
     # Calculate arc length parameter
     dx = np.diff(pixel_curve[:, 0])
@@ -92,110 +66,20 @@ def smooth_with_univariate_spline(pixel_curve, smoothing_factor=None, num_points
 
 
 
-
-def arclength_parametrization(
-    x, y,
-    spacing: Optional[float] = None,
-    n_samples: Optional[int] = 200,
-    method: str = "linear",
-    smooth_sigma: float = 0.0,
-    closed: bool = False
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def smooth_with_regularization(pixel_curve, arclen_points=0.5, smoothing_factor=0.05):
     """
-    Resample a 2D polyline (x,y) onto a uniform arc-length parameter.
-
-    Parameters
-    ----------
-    x, y : array-like
-        Ordered coordinates along the curve.
-    spacing : float, optional
-        Desired step in arc length (same units as x,y). If provided, overrides n_samples.
-    n_samples : int, optional
-        Number of uniformly spaced samples (default 200). Ignored if spacing is given.
-    method : {"linear","cubic"}
-        Interpolation method. "cubic" uses SciPy if available; falls back to linear.
-    smooth_sigma : float
-        Optional Gaussian smoothing (in *samples* along the index), e.g. 1–2 to tame pixel jaggies.
-        0 disables smoothing.
-    closed : bool
-        If True, treat curve as closed (include final segment back to the start during length calc).
-
-    Returns
-    -------
-    s_uniform : (M,) np.ndarray
-        Uniform arc-length parameter from 0 to total length L.
-    x_uniform, y_uniform : (M,) np.ndarray
-        Resampled coordinates at uniform arc-length.
-    s_cum : (N,) np.ndarray
-        Cumulative arc-length of the (possibly smoothed) input polyline.
+    Smooth both x and y with curvature regularization
     """
-    x = np.asarray(x).ravel()
-    y = np.asarray(y).ravel()
+    px = pixel_curve[:, 0]
+    py = pixel_curve[:, 1]
+    num_points = round(len(px) * arclen_points) 
+    arclen_curve = arclen_parametrization(px, py, num_points)
+    smoothed_curve = smooth_with_univariate_spline(arclen_curve, smoothing_factor=smoothing_factor, num_points=num_points)
+   
+    smoothed_curve[0] = pixel_curve[0]
+    smoothed_curve[-1] = pixel_curve[-1]
 
-    # Drop NaNs and exact duplicates
-    good = ~(np.isnan(x) | np.isnan(y))
-    x, y = x[good], y[good]
-    if x.size < 2:
-        raise ValueError("Need at least two valid points.")
-
-    keep = np.ones_like(x, dtype=bool)
-    keep[1:] = (np.diff(x) != 0) | (np.diff(y) != 0)
-    x, y = x[keep], y[keep]
-    if x.size < 2:
-        raise ValueError("All points are duplicates.")
-
-    # If closed, append the first point at the end if it's not already there
-    if closed:
-        if x[0] != x[-1] or y[0] != y[-1]:
-            x = np.concatenate([x, x[:1]])
-            y = np.concatenate([y, y[:1]])
-
-    # Optional Gaussian smoothing along the *sequence index*
-    if smooth_sigma and smooth_sigma > 0:
-        r = int(np.ceil(4 * smooth_sigma))
-        t = np.arange(-r, r + 1, dtype=float)
-        g = np.exp(-(t**2) / (2 * smooth_sigma**2))
-        g /= g.sum()
-        mode = "wrap" if closed else "reflect"
-        x = np.convolve(np.pad(x, (r, r), mode), g, mode="valid")
-        y = np.convolve(np.pad(y, (r, r), mode), g, mode="valid")
-
-    # Cumulative arc length
-    ds = np.hypot(np.diff(x), np.diff(y))
-    s_cum = np.concatenate([[0.0], np.cumsum(ds)])
-    L = float(s_cum[-1])
-
-    # Build uniform arc-length grid
-    if spacing is not None:
-        if spacing <= 0:
-            raise ValueError("spacing must be positive.")
-        s_uniform = np.arange(0.0, L, spacing)
-        if s_uniform.size == 0 or s_uniform[-1] < L:
-            s_uniform = np.append(s_uniform, L)
-    else:
-        n = max(2, int(n_samples))
-        s_uniform = np.linspace(0.0, L, n)
-
-    # Interpolation helpers
-    def interp_1d(s, v, su, method):
-        if method == "linear":
-            return np.interp(su, s, v)
-        elif method == "cubic":
-            try:
-                from scipy.interpolate import CubicSpline
-            except Exception:
-                # Fallback to linear if SciPy isn't available
-                return np.interp(su, s, v)
-            # Use natural boundary conditions
-            cs = CubicSpline(s, v, bc_type="natural")
-            return cs(su)
-        else:
-            raise ValueError("method must be 'linear' or 'cubic'.")
-
-    x_uniform = interp_1d(s_cum, x, s_uniform, method)
-    y_uniform = interp_1d(s_cum, y, s_uniform, method)
-
-    return s_uniform, x_uniform, y_uniform, s_cum
+    return smoothed_curve
 
 
 
@@ -264,6 +148,67 @@ def arc_length(points, closed=False):
     step = step[step > 0]                    # ignore accidental repeats
 
     return float(step.sum())
+
+
+
+def arclen_parametrization(px, py, num_points):
+    if num_points > 1:
+        # equally spaced in arclength
+        N = np.transpose(np.linspace(0, 1, num_points))
+
+        # how many points will be uniformly interpolated?
+        nt = N.size
+
+        # number of points on the curve
+        n = px.size
+        pxy = np.column_stack([px, py])
+        pt = np.zeros((nt, 2))
+
+        # Compute the arclength of each segment.
+        chordlen = (np.sum(np.diff(pxy, axis=0) ** 2, axis=1)) ** (1 / 2)
+        # Normalize the arclengths to a unit total
+        chordlen = chordlen / np.sum(chordlen)
+        # cumulative arclength
+        cumarc = np.append(0, np.cumsum(chordlen))
+
+        tbins = np.digitize(N, cumarc)  # bin index in which each N is in
+
+        # catch any problems at the ends
+        tbins[np.where(np.bitwise_or(tbins <= 0, (N <= 0)))] = 1
+        tbins[np.where(np.bitwise_or(tbins >= n, (N >= 1)))] = n - 1
+
+        s = np.divide((N - cumarc[tbins - 1]), chordlen[tbins - 1])
+        pt = pxy[tbins - 1, :] + np.multiply((pxy[tbins, :] - pxy[tbins - 1, :]), (np.vstack([s] * 2)).T)
+
+        pt[0] = np.array([px[0], py[0]])
+        pt[-1] = np.array([px[-1], py[-1]])
+        return pt
+    else:
+        return np.array([(px[0], py[0]),(px[-1], py[-1])])
+
+
+
+def smooth_with_arc_length(x, y, size):
+    # Calculate cumulative arc length
+    dx = np.diff(x)
+    dy = np.diff(y)
+    ds = np.sqrt(dx**2 + dy**2)
+    length = np.sum(ds)
+    ratio = abs(1 - (length / len(dx))) if (length / len(dx)) > 1 else (length / len(dx)) 
+    ratio1 = len(dx) / length 
+    # print("Curve ratio: {}".format(ratio))  
+
+    size = round(len(dx) * (ratio)) 
+    s = np.concatenate(([0], np.cumsum(ds)))
+    
+    # Resample to uniform arc length
+    s_uniform = np.linspace(0, s[-1], size)
+    x_uniform = np.interp(s_uniform, s, x)
+    y_uniform = np.interp(s_uniform, s, y)
+    
+    smooth_curve = np.column_stack([x_uniform, y_uniform])
+    return smooth_curve
+    
 
 
 def uniform_resample(points, n, closed=False, duplicate_endpoint=False):
