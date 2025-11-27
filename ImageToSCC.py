@@ -13,6 +13,7 @@ import ezdxf
 from ezdxf.addons.drawing import RenderContext, Frontend
 from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
 
+import utils.Smoothing as smooth
 from Tortuosity_Measures import TortuosityMeasures as tort
 
 
@@ -171,6 +172,58 @@ def build_interpolated_tree(tree_path):
             branch.append(data)
 
     return interp_tree
+
+
+
+def build_interpolated_tree_2(tree_path):
+    """
+
+    :param tree_path:
+    :return:
+    """
+    p1 = 2
+    p2 = 0
+    branch = []
+    branches = {}
+    interp_branches = {}
+    interp_tree = [2, 1, tree_path[2]]
+
+    for k in range(2, len(tree_path)):
+        data = tree_path[k]
+
+        if type(data) is not tuple:
+            # print(branch[-1])
+            if data != 1:
+                if not p1:
+                    p1 = data
+                else:
+                    p2 = data
+            if p1 and p2:
+                if p1 < p2:       
+                    smooth_curve = smooth.smooth_with_regularization(np.array(branch), arclen_points=0.59, smoothing_factor=0.057)
+                    interp_branch = [(point[0], point[1]) for point in smooth_curve]
+
+                    branches[(p1, p2)] = branch
+                    interp_branches[(p1, p2)] = interp_branch
+
+                    for i in range(1, len(interp_branch)):
+                        interp_tree.append(interp_branch[i])
+                else:
+                    interp_branch = interp_branches[(p2, p1)]
+                    interp_branch.reverse()
+                    for i in range(1, len(interp_branch)):
+                        interp_tree.append(interp_branch[i])
+
+                branch = [branch[-1]]
+                p1 = p2
+                p2 = 0
+            interp_tree.append(data)
+        else:
+            branch.append(data)
+
+    return interp_tree
+
+
 
 
 def build_scc_tree(interp_tree):
@@ -810,6 +863,29 @@ def create_scc_closed_curve(dx, dy):
         last = current
         current = next
     return scc_curve 
+
+
+
+
+
+def plot_results(curve1, curve2):
+    """
+    Plot the results of the polynomial fitting
+    """
+    plt.figure(figsize=(12, 12))
+    plt.plot(curve1[:, 0], curve1[:, 1], 'bo-', alpha=0.3, markersize=2, linewidth=1, label='Original')
+    plt.plot(curve2[:, 0], curve2[:, 1], 'ro-', alpha=0.8, markersize=2, linewidth=1, label='Smoothed')
+
+
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('Curve Smoothing with Cubic Spline')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.axis('equal')
+    plt.show()
+
+
 
 
 if __name__ == '__main__':
