@@ -16,7 +16,7 @@ from scipy.signal import savgol_filter
 from scipy.spatial import cKDTree
 
 import Curve_utils as cutils
-import Smoothing as smooth
+import utils.Smoothing as smooth
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
 
@@ -76,7 +76,7 @@ def build_local_interpolated_tree(tree_path):
                     # smoothed_curve = smooth_with_arc_length(bx, by, 25)
                     # smoothed_curve = smooth_Savitzky_Golay(bx, by,size_vec, 11, 5)
 
-                    smoothed_curve = smooth_with_regularization(pixel_curve, 0.5, 0.5)
+                    smoothed_curve = smooth.smooth_with_regularization(pixel_curve, 0.5, 0.5)
                     
                     smoothed_curve[0] = np.array([bx[0], by[0]])
                     smoothed_curve[-1] = np.array([bx[-1], by[-1]])
@@ -109,6 +109,8 @@ def build_local_interpolated_tree(tree_path):
 
     print("Points on branches: {}".format(len_vec))
     return interp_tree
+
+
 
 def load_tort_file(filename):
     values = []
@@ -222,8 +224,8 @@ def test_curve_interpolation(path, image_folder, des_file):
                  # compute the distance between curves                 
                 name, _ = os.path.splitext(fname)                
                 original_curve = read_coordinates(os.path.join(path, "points", name + ".txt")) * scale
-                D = average_min_distance(param_curve, original_curve)
-
+                
+                D = smooth.average_min_distance(param_curve, original_curve)
                 dists.append(D)       
 
                 # plot_three_curves(original_curve, param_curve, pixel_curve[:, [1, 0]], labels=["Original", "Smoothed", "Pixelated"])                                
@@ -301,11 +303,12 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                 s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(bx, by, n_samples=size_vec, method="linear")
                 pixel_param_curve = np.column_stack([x_eq, y_eq])
 
-                # smoothed_curve = pixel_param_curve
+                smoothed_curve = pixel_param_curve
                 # smoothed_curve = smooth_Savitzky_Golay(x_eq, y_eq, len(x_eq), 11, 3)
-                smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, 0.057)
+                # smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, 0.057)
                 # smoothed_curve = smooth_with_univariate_spline(pixel_param_curve, smoothing_factor=0.047, num_points=size_vec)
 
+                
                 
                 # plot_results(pixel_curve[:, [1, 0]], smoothed_curve[:, [1, 0]])
 
@@ -413,64 +416,16 @@ def test_curve_smoothing_all(path, image_folder, des_file, rate=0.25):
 
 
 
-def interp_curve(num_points, px, py):
-    if num_points > 1:
-        # equally spaced in arclength
-        N = np.transpose(np.linspace(0, 1, num_points))
 
-        # how many points will be uniformly interpolated?
-        nt = N.size
 
-        # number of points on the curve
-        n = px.size
-        pxy = np.column_stack([px, py])
-        pt = np.zeros((nt, 2))
 
-        # Compute the arclength of each segment.
-        chordlen = (np.sum(np.diff(pxy, axis=0) ** 2, axis=1)) ** (1 / 2)
-        # Normalize the arclengths to a unit total
-        chordlen = chordlen / np.sum(chordlen)
-        # cumulative arclength
-        cumarc = np.append(0, np.cumsum(chordlen))
 
-        tbins = np.digitize(N, cumarc)  # bin index in which each N is in
 
-        # catch any problems at the ends
-        tbins[np.where(np.bitwise_or(tbins <= 0, (N <= 0)))] = 1
-        tbins[np.where(np.bitwise_or(tbins >= n, (N >= 1)))] = n - 1
-
-        s = np.divide((N - cumarc[tbins - 1]), chordlen[tbins - 1])
-        pt = pxy[tbins - 1, :] + np.multiply((pxy[tbins, :] - pxy[tbins - 1, :]), (np.vstack([s] * 2)).T)
-
-        pt[0] = np.array([px[0], py[0]])
-        pt[-1] = np.array([px[-1], py[-1]])
-        return pt
-    else:
-        return np.array([(px[0], py[0]),(px[-1], py[-1])])
     
 
 
 
-def smooth_with_arc_length(x, y, size):
-    # Calculate cumulative arc length
-    dx = np.diff(x)
-    dy = np.diff(y)
-    ds = np.sqrt(dx**2 + dy**2)
-    length = np.sum(ds)
-    ratio = abs(1 - (length / len(dx))) if (length / len(dx)) > 1 else (length / len(dx)) 
-    ratio1 = len(dx) / length 
-    # print("Curve ratio: {}".format(ratio))  
 
-    size = round(len(dx) * (ratio)) 
-    s = np.concatenate(([0], np.cumsum(ds)))
-    
-    # Resample to uniform arc length
-    s_uniform = np.linspace(0, s[-1], size)
-    x_uniform = np.interp(s_uniform, s, x)
-    y_uniform = np.interp(s_uniform, s, y)
-    
-    smooth_curve = np.column_stack([x_uniform, y_uniform])
-    return smooth_curve
 
 
 
@@ -628,6 +583,7 @@ def plot_results(curve1, curve2):
     plt.grid(True, alpha=0.3)
     plt.axis('equal')
     plt.show()
+
 
 
 

@@ -307,8 +307,8 @@ def test_paper():
     print("NCirc = {} Tort = {} Mean Slope Chain = {}".format(non_circ, T, M_sc))
 
 
-def open_tree_def():
-    with open('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml', 'r') as file:
+def open_tree_def(config_file_path):
+    with open(config_file_path, 'r') as file:
         config_data = yaml.safe_load(file)
 
     sp = (config_data["start_position"]["y"], config_data["start_position"]["x"])
@@ -324,7 +324,31 @@ def open_tree_def():
     interp_tree = imscc.build_interpolated_tree(treepath)
 
     return interp_tree    
+
+
+def open_tree_def_2(config_file_path, tree_idx, pos_idx):
+    type_tree = "norm_trees"
+    folder = "norm_folder"
+
+    with open(config_file_path, 'r') as file:
+        config_data = yaml.safe_load(file)
+
+        trees = config_data[type_tree]
+        tree = trees[tree_idx]
+        image_path = config_data[folder] + tree["binary_image"]        
+        assert os.path.isfile(image_path), "The image {} doesn't exixt".format(tree["binary_image"])
+
+        o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        positons  = tree["start_position"]
+        elem = positons[pos_idx]
+        sp = (elem["position"]["y"], elem["position"]["x"])
+
+        treepath = imscc.build_tree(o_image, sp)
+        interp_tree = imscc.build_interpolated_tree_2(treepath)            
+
+        return interp_tree    
     
+
 
 def test_branch():
 
@@ -450,12 +474,12 @@ def test_all():
 
     
 
-def test_tree_class():
-    interp_tree = open_tree_def()
+def test_tree_class(config_file_path, tree_idx, pos_idx):
+    interp_tree = open_tree_def_2(config_file_path, tree_idx, pos_idx)
     [scc_tree, dist] = imscc.build_scc_tree(interp_tree)
 
-    # imscc.display_tree(scc_tree, dist)
-    # [X, Y] = imscc.plot_tree(scc_tree, dist)
+    imscc.display_tree(scc_tree, dist)
+    [X, Y] = imscc.plot_tree(scc_tree, dist)
 
 
     scc_tree = SCC_Tree(interp_tree)    
@@ -473,10 +497,11 @@ def test_tree_class():
 
 if __name__ == '__main__':
     # test_circle(1)
-    test_paper()
+    # test_paper()
     # test_branch()
     # test_all()
-    test_tree_class()
+    # test_tree_class('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml')
+    test_tree_class('/Users/zianfanti/Trabajo/tree_representation/back-forth/positions.yaml', 5, 0)
     # test_bifurcation_finding_2()
 
     
