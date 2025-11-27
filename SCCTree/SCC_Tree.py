@@ -20,6 +20,36 @@ class SCC_Tree:
         self.size = self.__get_size()
 
 
+    def __build_scc_tree(self, interp_tree) -> list[list, list]:
+        tree_dist = [2, 1, math.dist(interp_tree[2], interp_tree[3])]
+        tree_scc = [2, 1, self.__get_slope_change(None, interp_tree[2], interp_tree[3])]
+        last = interp_tree[2]
+        current = interp_tree[3]
+
+        for k in range(4, len(interp_tree) - 1):
+            next = interp_tree[k]
+            if type(next) is not tuple:
+                if next != 1:
+                    tree_scc.append(next)
+                    tree_dist.append(next)            
+            else:
+                if last == next: 
+                    alpha = 1
+                else:
+                    alpha = self.__get_slope_change(last, current, next)
+                dist = math.dist(current, next)
+                tree_scc.append(alpha)
+                tree_dist.append(dist)
+
+                last = current
+                current = next
+
+        tree_scc.append(-tree_scc[2])
+        tree_dist.append(tree_dist[2])
+    
+        return [tree_scc, tree_dist]
+
+
     def __build_interpolated_tree(self, tree_path) -> list:
         """
 
@@ -122,35 +152,7 @@ class SCC_Tree:
             return np.array([(px[0], py[0]),(px[-1], py[-1])])
 
     
-    def __build_scc_tree(self, interp_tree) -> list[list, list]:
-        tree_dist = [2, 1, math.dist(interp_tree[2], interp_tree[3])]
-        tree_scc = [2, 1, self.__get_slope_change(None, interp_tree[2], interp_tree[3])]
-        last = interp_tree[2]
-        current = interp_tree[3]
-
-        for k in range(4, len(interp_tree) - 1):
-            next = interp_tree[k]
-            if type(next) is not tuple:
-                if next != 1:
-                    tree_scc.append(next)
-                    tree_dist.append(next)            
-            else:
-                if last == next: 
-                    alpha = 1
-                else:
-                    alpha = self.__get_slope_change(last, current, next)
-                dist = math.dist(current, next)
-                tree_scc.append(alpha)
-                tree_dist.append(dist)
-
-                last = current
-                current = next
-
-        tree_scc.append(-tree_scc[2])
-        tree_dist.append(tree_dist[2])
     
-        return [tree_scc, tree_dist]
-
 
     def __get_slope_change(self, p0, p1, p2):
         """
@@ -495,8 +497,11 @@ class SCC_Tree:
                 yy1 = yy1 + segment_size * np.sin(slope * np.pi)
             k += 1
 
+        plt.figure(figsize=(12, 12))
         plt.plot(X, Y, 'r.-')
+        plt.grid(True, alpha=0.3)
         plt.axis('equal')
+        plt.tight_layout()
         plt.show()
 
         return [X, Y]
