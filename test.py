@@ -11,7 +11,7 @@ import ImageToSCC as imscc
 
 
 from SCC_Tree_old import SCC_Tree
-from SCCTree.SCC_Tree import SCC_Tree
+from scc_tree.SCC_Tree import SCC_Tree
 from Morphology_Measures import Morphology_Measures
 from Tortuosity_Measures import TortuosityMeasures
 
