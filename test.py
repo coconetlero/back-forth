@@ -515,7 +515,8 @@ if __name__ == '__main__':
     # test_branch()
     # test_all()
     # test_tree_class('/Users/zianfanti/Trabajo/tree_representation/back-forth/positions.yaml', 5, 0)
-    test_scc_tree_class('/Users/zianfanti/Trabajo/tree_representation/back-forth/config.yaml')
+    # test_scc_tree_class('/Users/zianfanti/Trabajo/tree_representation/back-forth/config.yaml')
+    test_scc_tree_class('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml')
     # test_bifurcation_finding_2()
 
    
