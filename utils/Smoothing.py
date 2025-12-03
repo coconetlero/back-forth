@@ -40,7 +40,7 @@ def smooth_with_univariate_spline(pixel_curve, smoothing_factor=1.1, num_points=
     """
 
     # size = int(len(pixel_curve[:, 0]) * 0.25)
-    size = pixel_curve.shape[0] if num_points is 0 else num_points
+    size = pixel_curve.shape[0] if num_points == 0 else num_points
 
     # Calculate arc length parameter
     dx = np.diff(pixel_curve[:, 0])

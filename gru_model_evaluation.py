@@ -11,15 +11,19 @@ from __future__ import annotations
 
 import argparse
 import os
-from dataclasses import dataclass
+import re
 from typing import List, Tuple
+from dataclasses import dataclass
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
+import cv2
 import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+
+import ImageToSCC as imscc
 
 
 # ----------------------------------------------------------------------
@@ -268,22 +272,27 @@ def main(config: TrainingConfig):
     # Example dummy data: 1000 curves, random lengths between 20 and 100,
     # random (x, y) coordinates, and random targets w.
     # Replace this block with your actual curves & targets.
-    num_samples = 1000
-    min_len, max_len = 20, 100
+    # num_samples = 1000
+    # min_len, max_len = 20, 100
 
-    curves: List[np.ndarray] = []
-    targets = np.zeros((num_samples, 2), dtype=np.float32)
+    # curves: List[np.ndarray] = []
+    # targets = np.zeros((num_samples, 2), dtype=np.float32)
 
-    for i in range(num_samples):
-        n_i = np.random.randint(min_len, max_len + 1)
-        # random curve
-        pts = np.random.randn(n_i, 2).astype(np.float32)
-        curves.append(pts)
+    # for i in range(num_samples):
+    #     n_i = np.random.randint(min_len, max_len + 1)
+    #     # random curve
+    #     pts = np.random.randn(n_i, 2).astype(np.float32)
+    #     curves.append(pts)
 
-        # example target: just for demonstration
-        # In your case, this should be the true w_i*
-        targets[i] = np.random.randn(2).astype(np.float32)
+    #     # example target: just for demonstration
+    #     # In your case, this should be the true w_i*
+    #     targets[i] = np.random.randn(2).astype(np.float32)
     # ------------------------------------------------------------------
+
+    # Load curves data
+    # curves = load_curve_dataset('/Volumes/HOUSE MINI/IMAGENES/curves', 'coordinates_curves.txt', 'images')
+    curves = load_curve_dataset('/Users/zianfanti/IIMAS/images_databases/curves_200_5', 'coordinates_curves.txt', 'images')
+    targets = load_targets_dataset('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/train/30itter_1000samples_separeted.csv')
 
     # Train/val split
     N = len(curves)
@@ -335,6 +344,7 @@ def main(config: TrainingConfig):
     best_val_loss = float("inf")
     epochs_without_improvement = 0
 
+    print("Start train")
     for epoch in range(1, config.num_epochs + 1):
         train_loss = train_one_epoch(
             model, train_loader, optimizer, criterion, config.device
@@ -355,6 +365,60 @@ def main(config: TrainingConfig):
             break
 
     print(f"Best validation loss: {best_val_loss:.6f}")
+
+
+
+def load_curve_dataset(curves_dir_path, description_filename, image_folder):
+    curves = []
+    with open(os.path.join(curves_dir_path, description_filename), 'r', encoding='utf-8') as f:        
+        for idx, line in enumerate(f):            
+            match1 = re.search(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)', line)               
+            if match1:
+                fname = match1.group(1)
+
+                match2 = re.search(r'_(\d+)_X(\d+)', fname)
+                if match2:
+                    scale = float(match2.group(2)) / 10.
+                    
+                x = float(match1.group(2))
+                y = float(match1.group(3))
+                sp = (int(y), int(x))
+
+                o_image = cv2.imread(os.path.join(curves_dir_path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
+                treepath = imscc.build_tree(o_image, sp)           
+                
+                name, _ = os.path.splitext(fname)                                
+                branch = []
+
+                k = 2
+                curve_elem = treepath[k]
+                while type(curve_elem) is tuple:
+                    branch.append(curve_elem)
+                    curve_elem = treepath[k]
+                    k += 1
+                
+                px = [point[0] for point in branch]
+                py = [point[1] for point in branch]
+                pixel_curve = np.column_stack([px, py])
+                curves.append(np.array(pixel_curve))
+    
+    return curves
+
+
+def load_targets_dataset(targets_filename):
+    data = []
+
+    with open(targets_filename, 'r') as f:
+        for line in f:
+            parts = [p.strip() for p in line.split(',')]            
+            num_points = float(parts[2])
+            smooth = float(parts[3])
+            data.append([num_points, smooth])
+
+    return np.array(data)
+
+
+
 
 
 if __name__ == "__main__":
