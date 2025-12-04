@@ -18,6 +18,8 @@ class SCC_Tree:
     _scc_chain_tree = []
     _scc_chain_dist = [] 
 
+    _raster_tree = []
+
 
     def __init__(self, interp_tree):
         [self._tree, self._dists] = self._build_scc_tree(interp_tree)
@@ -30,8 +32,8 @@ class SCC_Tree:
 
     @classmethod
     def create_from_image(cls, image, tree_root) -> 'SCC_Tree':
-        treepath = cls._build_tree(image, tree_root)
-        interp_tree = cls._build_interpolated_tree(treepath)
+        cls._treepath = cls._build_tree(image, tree_root)
+        interp_tree = cls._build_interpolated_tree(cls._treepath)
         scc_tree = cls(interp_tree)   
         return scc_tree
         # return cls(interp_tree)   
@@ -666,3 +668,31 @@ class SCC_Tree:
         plt.show()
 
         return [X, Y]
+    
+    
+    def get_pixelated_branches(self):
+        p1 = 2
+        p2 = 0
+        branch = []
+        branches = []
+        
+        for k in range(2, len(self._treepath)):
+            data = self._treepath[k]
+
+            if type(data) is not tuple:
+                if data != 1:
+                    if not p1:
+                        p1 = data
+                    else:
+                        p2 = data
+                if p1 and p2:
+                    if p1 < p2:       
+                        branches.append(np.array(branch))                    
+
+                    branch = [branch[-1]]
+                    p1 = p2
+                    p2 = 0                
+            else:
+                branch.append(data)
+
+        return branches

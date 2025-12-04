@@ -8,12 +8,13 @@ import pandas as pd
 import yaml
 
 import ImageToSCC as imscc
-
+import utils.load_and_write as lw
 
 from SCC_Tree_old import SCC_Tree
 from scc_tree.SCC_Tree import SCC_Tree
 from Morphology_Measures import Morphology_Measures
 from Tortuosity_Measures import TortuosityMeasures
+
 
 from numpy import genfromtxt, diff
 
@@ -498,6 +499,8 @@ def test_scc_tree_class(config_file_path):
     scc_tree = SCC_Tree.create_from_image(image, tree_root)
     scc_tree.plot_tree()
 
+    branches = scc_tree.get_pixelated_branches()
+
     tree2 = scc_tree.get_tree()
     [T, T_n] = scc_tree.tree_tortuosity()
     L = scc_tree.tree_length()
@@ -505,7 +508,15 @@ def test_scc_tree_class(config_file_path):
 
     
 
-   
+def test_learning_model(config_file_path):
+    [image, tree_root] = open_tree_def(config_file_path)
+    scc_tree = SCC_Tree.create_from_image(image, tree_root)
+    branches = scc_tree.get_pixelated_branches()
+  
+    for branch in branches:
+        X = branch[:, 1]
+        Y = branch[:, 0]
+        plot_segment(X, Y)
 
 
 
@@ -516,7 +527,8 @@ if __name__ == '__main__':
     # test_all()
     # test_tree_class('/Users/zianfanti/Trabajo/tree_representation/back-forth/positions.yaml', 5, 0)
     # test_scc_tree_class('/Users/zianfanti/Trabajo/tree_representation/back-forth/config.yaml')
-    test_scc_tree_class('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml')
+    test_learning_model('/Users/zianfanti/Trabajo/tree_representation/back-forth/config.yaml')
+    # test_scc_tree_class('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml')
     # test_bifurcation_finding_2()
 
    
