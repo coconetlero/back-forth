@@ -20,6 +20,7 @@ import utils.Smoothing as smooth
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
 
+import utils.load_and_write as lw
 from SCC_Tree_old import SCC_Tree
 from Morphology_Measures import Morphology_Measures
 from Tortuosity_Measures import TortuosityMeasures
@@ -279,10 +280,9 @@ def test_curve_smoothing(path, image_folder, des_file, rate=0.25):
                 branch = []
 
                 k = 2
-                curve_elem = treepath[k]
-                while type(curve_elem) is tuple:
-                    branch.append(curve_elem)
-                    curve_elem = treepath[k]
+                branch = []                
+                while type(treepath[k]) is tuple:
+                    branch.append(treepath[k])                    
                     k += 1
                 
                 bx = np.array([point[0] for point in branch])
@@ -390,10 +390,9 @@ def test_curve_smoothing_all(path, image_folder, des_file, rate=0.25):
                 branch = []
 
                 k = 2
-                curve_elem = treepath[k]
-                while type(curve_elem) is tuple:
-                    branch.append(curve_elem)
-                    curve_elem = treepath[k]
+                branch = []                
+                while type(treepath[k]) is tuple:
+                    branch.append(treepath[k])                    
                     k += 1
                 
                 bx = np.array([point[0] for point in branch])
@@ -663,6 +662,13 @@ def measure_neuron_tree(config_file, image_filename):
 
 
 
+def test_load_and_write():
+    lw.save_pixelated_curve_set('/Volumes/HOUSE MINI/IMAGENES/curves_200_5', 'coordinates_curves.txt', 'images',
+                                '/Volumes/HOUSE MINI/IMAGENES/curves_200_5/px_points') 
+    lw.load_curves_from_txt_file('/Volumes/HOUSE MINI/IMAGENES/curves_200_5/px_points')
+
+
+
 # measure_neuron_tree('neuron_config_2.yaml', 'fish01_2.CNG.tif')
 
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
@@ -672,7 +678,7 @@ start_time = time.perf_counter()
 
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
 # test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
-test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
+# test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
 # test_curve_smoothing_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
 
 
@@ -680,6 +686,10 @@ test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinat
 #     print("---- Rate: {} ----".format(r))
 #     test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=r)
 
-end_time = time.perf_counter()
+test_load_and_write()
 
+
+
+end_time = time.perf_counter()
+print(f"Execution time: {end_time - start_time:.6f} seconds")
 

@@ -245,9 +245,7 @@ def save_model(model: nn.Module, config: TrainingConfig):
     print(f"Saved model to {path}")
 
 
-def load_model(
-    model: nn.Module, config: TrainingConfig, strict: bool = True
-) -> bool:
+def load_model(model: nn.Module, config: TrainingConfig, strict: bool = True) -> bool:
     path = os.path.join(config.model_dir, config.model_name)
     if not os.path.exists(path):
         print(f"No model found at {path}")
@@ -290,9 +288,10 @@ def main(config: TrainingConfig):
     # ------------------------------------------------------------------
 
     # Load curves data
-    # curves = load_curve_dataset('/Volumes/HOUSE MINI/IMAGENES/curves', 'coordinates_curves.txt', 'images')
-    curves = load_curve_dataset('/Users/zianfanti/IIMAS/images_databases/curves_200_5', 'coordinates_curves.txt', 'images')
-    targets = load_targets_dataset('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/train/30itter_1000samples_separeted.csv')
+    curves = load_curve_dataset('/Volumes/HOUSE MINI/IMAGENES/curves_200_5', 'coordinates_curves.txt', 'images')
+    # curves = load_curve_dataset('/Users/zianfanti/IIMAS/images_databases/curves_200_5', 'coordinates_curves.txt', 'images')
+    targets = load_targets_dataset('train/30itter_1000samples_separeted.csv')
+    # targets = load_targets_dataset('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/train/30itter_1000samples_separeted.csv')
 
     # Train/val split
     N = len(curves)
@@ -391,10 +390,9 @@ def load_curve_dataset(curves_dir_path, description_filename, image_folder):
                 branch = []
 
                 k = 2
-                curve_elem = treepath[k]
-                while type(curve_elem) is tuple:
-                    branch.append(curve_elem)
-                    curve_elem = treepath[k]
+                branch = []                
+                while type(treepath[k]) is tuple:
+                    branch.append(treepath[k])                    
                     k += 1
                 
                 px = [point[0] for point in branch]
