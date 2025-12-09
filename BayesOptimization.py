@@ -285,25 +285,20 @@ if __name__ == "__main__":
         # x: (2, n)
         # w: (2,)    
 
-        pixel_curve = scale_original_curve["test"]
         original_curve = scale_original_curve["original"]
+        pixel_curve = scale_original_curve["test"]
         scale = scale_original_curve["scale"]
 
-        w1, w2 = w
-        size_vec = round(pixel_curve.shape[0] * w1)  
-        bx = pixel_curve[:,0]
-        by = pixel_curve[:,1]
-        s_eq, x_eq, y_eq, _ = smooth.arclength_parametrization(bx, by, n_samples=size_vec, method="linear")
-        pixel_param_curve = np.column_stack([x_eq, y_eq])
-        smoothed_curve = smooth.smooth_with_regularization(pixel_param_curve, w2)
+        points_v, smooth_v = w        
+        smoothed_curve = smooth.smooth_with_regularization(pixel_curve, arclen_points=points_v, smoothing_factor=smooth_v)
 
-        # plot_results(original_curve, smoothed_curve[:, [1, 0]])
+        # plot_results(original_curve, smoothed_curve)
 
         [To, _] = measure.SCC(original_curve)
         [T, _] = measure.SCC(smoothed_curve)
         
         Td = abs(To - T)
-        D = D = (smooth.average_min_distance(smoothed_curve[:, [1, 0]], original_curve) / scale) / smoothed_curve.shape[0]
+        D = (smooth.average_min_distance(smoothed_curve, original_curve) / scale) / smoothed_curve.shape[0]
         return float(Td), float(D)
 
     
@@ -350,16 +345,16 @@ if __name__ == "__main__":
                 
                 bx = np.array([point[0] for point in branch])
                 by = np.array([point[1] for point in branch])
-                pixel_curve = np.column_stack([bx, by])
+                pixel_curve = np.column_stack([by, bx])
                                 
-                a = 0.5
-                b = 0.5
+                a = 0.2
+                b = 0.8
                 interations = 30
 
                 # Bounds for w = [w1, w2]
                 lows = np.array([0.1, 0.01], dtype=float)
                 highs = np.array([1.0, 0.2], dtype=float) 
-                bounds = Bounds(lows=lows, highs=highs)
+                bounds = Bounds(lows=lows, highs=highs)                
 
                 scale_random_curve = {
                     "test": pixel_curve,
@@ -384,14 +379,20 @@ if __name__ == "__main__":
                 dists.append(best_v)
                 params.append(best_w)
 
-        for idx in range(len(names)):
-            print('{:<4}, {}, {}, {:.4f}, {:.4f}'.format(idx, names[idx], np.array2string(np.array(params[idx]), precision=4), torts[idx], dists[idx]))
+        # for idx in range(len(names)):
+        #     # print('{:<4}, {}, {}, {:.4f}, {:.4f}'.format(idx, names[idx], np.array2string(np.array(params[idx]), precision=4), torts[idx], dists[idx]))
+        #     print('{:<4}, {:<20}, {:.6f}, {:.6f}, {:.6f}, {:.6f}'.format(idx, names[idx], params[idx][0], params[idx][1], torts[idx], dists[idx]))
+
+        output_filename = ("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/30iter_1500samples.csv")
+        with open(output_filename, 'w') as f:
+            for idx in range(len(names)):
+                f.write('{:<4}, {:<20}, {:.6f}, {:.6f}, {:.6f}, {:.6f} \n'.format(idx, names[idx], params[idx][0], params[idx][1], torts[idx], dists[idx]))
 
 
     start_time = time.perf_counter()
 
     # obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
-    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_200_5', "images", "coordinates_curves.txt")
+    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_200_5_1', "images", "coordinates_curves.txt")
 
     end_time = time.perf_counter()
     print(f"Execution time: {end_time - start_time:.6f} seconds") 

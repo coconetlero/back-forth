@@ -288,9 +288,9 @@ def main(config: TrainingConfig):
     # ------------------------------------------------------------------
 
     # Load curves data
-    curves = load_curve_dataset('/Volumes/HOUSE MINI/IMAGENES/curves_200_5', 'coordinates_curves.txt', 'images')
+    curves = load_curve_dataset('/Volumes/HOUSE MINI/IMAGENES/curves_200_5_1', 'coordinates_curves.txt', 'images')
     # curves = load_curve_dataset('/Users/zianfanti/IIMAS/images_databases/curves_200_5', 'coordinates_curves.txt', 'images')
-    targets = load_targets_dataset('train/30itter_1000samples_separeted.csv')
+    targets = load_targets_dataset('train/30iter_1500samples.csv')
     # targets = load_targets_dataset('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/train/30itter_1000samples_separeted.csv')
 
     # Train/val split

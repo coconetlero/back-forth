@@ -679,14 +679,14 @@ start_time = time.perf_counter()
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
 # test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
 # test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
-# test_curve_smoothing_all('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
+test_curve_smoothing_all('/Volumes/HOUSE MINI/IMAGENES/curves_200_5_1', "images", "coordinates_curves.txt", rate=0.25)
 
 
 # for r in [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55]:
 #     print("---- Rate: {} ----".format(r))
 #     test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=r)
 
-test_load_and_write()
+# test_load_and_write()
 
 
 

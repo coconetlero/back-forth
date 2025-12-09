@@ -105,8 +105,8 @@ def main():
     # w_pred = predict_w_from_curve(model, new_curve, device=device)
     # print("Predicted w:", w_pred)
 
-    # [image, tree_root] = open_tree_def("/Users/zianfanti/Trabajo/tree_representation/back-forth/config.yaml")
-    [image, tree_root] = open_tree_def("/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml")
+    [image, tree_root] = open_tree_def("/Users/zianfanti/Trabajo/tree_representation/back-forth/config.yaml")
+    # [image, tree_root] = open_tree_def("/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/config.yaml")
     scc_tree = SCC_Tree.create_from_image(image, tree_root)
     branches = scc_tree.get_pixelated_branches()
   
