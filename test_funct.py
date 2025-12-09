@@ -409,7 +409,7 @@ def test_curve_smoothing_all(path, image_folder, des_file, rate=0.25):
                 [T, _] = measure.SCC(smoothed_curve)
         
                 Td = abs(To - T)
-                D = D = (smooth.average_min_distance(smoothed_curve[:, [1, 0]], original_curve) / scale) / smoothed_curve.shape[0]
+                D = (smooth.average_min_distance(smoothed_curve[:, [1, 0]], original_curve) / scale) / smoothed_curve.shape[0]
 
                 print('{:<4} {:<20} {:.4f}  {:.4f}  {:.4f}'.format(idx, fname, To, Td, D))
 
