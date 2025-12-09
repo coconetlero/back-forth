@@ -66,7 +66,7 @@ def smooth_with_univariate_spline(pixel_curve, smoothing_factor=1.1, num_points=
 
 
 
-def smooth_with_regularization(pixel_curve, arclen_points=0.5, smoothing_factor=0.05):
+def smooth_with_regularization(pixel_curve, arclen_points=0.25, smoothing_factor=0.05):
     """
     Smooth both x and y with curvature regularization
     """
@@ -74,8 +74,9 @@ def smooth_with_regularization(pixel_curve, arclen_points=0.5, smoothing_factor=
     py = pixel_curve[:, 1]
     num_points = round(len(px) * arclen_points) 
     arclen_curve = arclen_parametrization(px, py, num_points)
-    smoothed_curve = smooth_with_univariate_spline(arclen_curve, smoothing_factor=smoothing_factor, num_points=num_points)
-   
+    
+    assert arclen_curve.shape[0] > 3, "The curve size need to have at least 4 points"
+    smoothed_curve = smooth_with_univariate_spline(arclen_curve, smoothing_factor=smoothing_factor, num_points=num_points)   
     smoothed_curve[0] = pixel_curve[0]
     smoothed_curve[-1] = pixel_curve[-1]
 
