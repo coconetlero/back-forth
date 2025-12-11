@@ -389,6 +389,8 @@ if __name__ == "__main__":
                 f.write('{:<4}, {:<20}, {:.6f}, {:.6f}, {:.6f}, {:.6f} \n'.format(idx, names[idx], params[idx][0], params[idx][1], torts[idx], dists[idx]))
 
 
+
+
     start_time = time.perf_counter()
 
     # obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
