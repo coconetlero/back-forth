@@ -663,9 +663,9 @@ def measure_neuron_tree(config_file, image_filename):
 
 
 def test_load_and_write():
-    lw.save_pixelated_curve_set('/Volumes/HOUSE MINI/IMAGENES/curves_200_5', 'coordinates_curves.txt', 'images',
-                                '/Volumes/HOUSE MINI/IMAGENES/curves_200_5/px_points') 
-    lw.load_curves_from_txt_file('/Volumes/HOUSE MINI/IMAGENES/curves_200_5/px_points')
+    lw.save_pixelated_curve_set('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', 'coordinates_curves.txt', 'images',
+                                '/Volumes/HOUSE MINI/IMAGENES/curves_500_5/pixel_curves') 
+    lw.load_curves_from_txt_file('/Volumes/HOUSE MINI/IMAGENES/curves_500_5/pixel_curves')
 
 
 
@@ -679,14 +679,14 @@ start_time = time.perf_counter()
 # test_curve_interpolation("/Users/zianfanti/IIMAS/images_databases/curves", "images", "coordinates_curves.txt")
 # test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=0.50)
 # test_curve_smoothing('/Volumes/HOUSE MINI/IMAGENES/curves', "images", "coordinates_curves.txt", rate=0.25)
-test_curve_smoothing_all('/Volumes/HOUSE MINI/IMAGENES/curves_200_5_1', "images", "coordinates_curves.txt", rate=0.25)
+# test_curve_smoothing_all('/Volumes/HOUSE MINI/IMAGENES/curves_200_5_1', "images", "coordinates_curves.txt", rate=0.25)
 
 
 # for r in [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55]:
 #     print("---- Rate: {} ----".format(r))
 #     test_curve_smoothing('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt", rate=r)
 
-# test_load_and_write()
+test_load_and_write()
 
 
 

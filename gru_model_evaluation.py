@@ -24,7 +24,7 @@ from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
 import ImageToSCC as imscc
-
+import utils.load_and_write as lw
 
 # ----------------------------------------------------------------------
 # Configuration
@@ -288,9 +288,11 @@ def main(config: TrainingConfig):
     # ------------------------------------------------------------------
 
     # Load curves data
-    curves = load_curve_dataset('/Volumes/HOUSE MINI/IMAGENES/curves_200_5_1', 'coordinates_curves.txt', 'images')
+    curves = load_curve_dataset_from_images('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', 'coordinates_curves.txt', 'images')
     # curves = load_curve_dataset('/Users/zianfanti/IIMAS/images_databases/curves_200_5', 'coordinates_curves.txt', 'images')
-    targets = load_targets_dataset('train/30iter_1500samples.csv')
+    # curves = lw. load_pixelated_curves_from_txt_file('/Volumes/HOUSE MINI/IMAGENES/curves_500_5/pixel_curves')
+
+    targets = load_targets_dataset('train/50iter_2500samples.csv')
     # targets = load_targets_dataset('/Users/zianfanti/IIMAS/Tree_Representation/src/back-forth/train/30itter_1000samples_separeted.csv')
 
     # Train/val split
@@ -367,7 +369,7 @@ def main(config: TrainingConfig):
 
 
 
-def load_curve_dataset(curves_dir_path, description_filename, image_folder):
+def load_curve_dataset_from_images(curves_dir_path, description_filename, image_folder):
     curves = []
     with open(os.path.join(curves_dir_path, description_filename), 'r', encoding='utf-8') as f:        
         for idx, line in enumerate(f):            
@@ -384,10 +386,7 @@ def load_curve_dataset(curves_dir_path, description_filename, image_folder):
                 sp = (int(y), int(x))
 
                 o_image = cv2.imread(os.path.join(curves_dir_path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
-                treepath = imscc.build_tree(o_image, sp)           
-                
-                name, _ = os.path.splitext(fname)                                
-                branch = []
+                treepath = imscc.build_tree(o_image, sp)      
 
                 k = 2
                 branch = []                
@@ -401,6 +400,8 @@ def load_curve_dataset(curves_dir_path, description_filename, image_folder):
                 curves.append(np.array(pixel_curve))
     
     return curves
+
+
 
 
 def load_targets_dataset(targets_filename):

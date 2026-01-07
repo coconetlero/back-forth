@@ -1,4 +1,5 @@
 import os
+import time
 # os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # os.environ["OMP_NUM_THREADS"] = "1"
 # os.environ["MKL_NUM_THREADS"] = "1"
@@ -119,8 +120,82 @@ def main():
         print("Predicted w:", w_pred)
         plot_results(branch, smooth_curve)
         
+
+
+def find_optimal_parameters(curve_folder, image_folder):
+
+    curves = sorted(os.listdir(curve_folder))
+    images = sorted(os.listdir(image_folder))
+
+
+     # Must match what you used in training
+    config = TrainingConfig(
+        hidden_dim=128,
+        num_layers=1,
+        model_dir="./models",
+        model_name="curve_to_w_gru.pt",
+    )
+    device = config.device
+
+    # Build model and load weights
+    model = CurveToWModel(
+        input_dim=2,
+        hidden_dim=config.hidden_dim,
+        num_layers=config.num_layers,
+    ).to(device)
+
+    ok = load_model(model, config)
+    if not ok:
+        return
+    
+    for curve, image in zip(curves, images):
+        curve_filename = os.path.join(curve_folder, curve)
+        image_filename = os.path.join(image_folder, image)
+
+        points = np.loadtxt(curve_filename, dtype=int)
+        unique_rows, idx = np.unique(points, axis=0, return_index=True)
+        pixelated_curve = unique_rows[np.argsort(idx)]
+
+        w_pred = predict_w_from_curve(model, pixelated_curve, device=device)
+        print("Predicted w:", w_pred)
+        
+        points_p = abs(w_pred[0])
+        smooth_p = abs(w_pred[1])
+        smooth_curve = smooth.smooth_with_regularization(pixelated_curve, arclen_points=points_p, smoothing_factor=smooth_p)
+
+        x = smooth_curve[:, 0]
+        y = smooth_curve[:, 1]
+
+        img_bgr = cv2.imread(image_filename)
+        if img_bgr is None:
+            raise FileNotFoundError("Could not load image")
+
+        # Convert to RGB for matplotlib
+        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        
+        plt.figure(figsize=(18, 12))
+        plt.imshow(img_rgb)
+        plt.plot(pixelated_curve[:, 0], pixelated_curve[:, 1], 'mo-', alpha=0.8, markersize=2, linewidth=1, label='Original')  # curve overlay        
+        plt.plot(x, y, linewidth=2, color='lime', alpha=0.7) 
+        plt.scatter(x, y, s=5, color='yellow', alpha=1.0)             
+        plt.axis('off')
+        plt.tight_layout()
+        plt.show()
         
  
 
 if __name__ == "__main__":
-    main()
+
+    start_time = time.perf_counter()
+
+    # main()
+    find_optimal_parameters('/Volumes/HOUSE MINI/IMAGENES/Fondus_Databases/RET-TORT/ROIs/arteries', 
+                            '/Volumes/HOUSE MINI/IMAGENES/Fondus_Databases/RET-TORT/Reduced Arteries Iso')
+    # find_optimal_parameters('/Volumes/HOUSE MINI/IMAGENES/Fondus_Databases/RET-TORT/ROIs/veins', 
+    #                         '/Volumes/HOUSE MINI/IMAGENES/Fondus_Databases/RET-TORT/Reduced Veins Iso')
+
+
+
+    end_time = time.perf_counter()
+    print(f"Execution time: {end_time - start_time:.6f} seconds") 
+    

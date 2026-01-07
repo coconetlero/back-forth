@@ -16,9 +16,9 @@ def save_pixelated_curve_set(curves_dir_path, description_filename, image_folder
                 fname = match1.group(1)      
                 name, _ = os.path.splitext(fname)         
                     
-                x = float(match1.group(2))
-                y = float(match1.group(3))
-                sp = (int(y), int(x))
+                x = int(match1.group(2))
+                y = int(match1.group(3))
+                sp = (y, x)
 
                 o_image = cv2.imread(os.path.join(curves_dir_path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
                 treepath = imscc.build_tree(o_image, sp)   
@@ -29,14 +29,14 @@ def save_pixelated_curve_set(curves_dir_path, description_filename, image_folder
                     branch.append(treepath[k])                    
                     k += 1
                 
-                px = [point[0] for point in branch]
-                py = [point[1] for point in branch]
+                px = [point[1] for point in branch]
+                py = [point[0] for point in branch]
                 pixel_curve = np.column_stack([px, py])                
                 np.savetxt(os.path.join(curves_dir_path, curves_folder_path, name + ".txt"), pixel_curve, fmt="%s")                
 
 
 
-def load_curve_from_txt_file(file_path):
+def load_float_curve_from_txt_file(file_path):
     """
     Load a curve from a txt file
     """
@@ -44,7 +44,7 @@ def load_curve_from_txt_file(file_path):
     return curve
 
 
-def load_curves_from_txt_file(folder_path):
+def load_float_curves_from_txt_file(folder_path):
     """
     Load all curves from a folder containing txt files
     """
@@ -53,7 +53,33 @@ def load_curves_from_txt_file(folder_path):
     filtered_filenames = [item for item in os.listdir(folder_path) if not item.startswith('._')]
     for filename in filtered_filenames:
         file_path = os.path.join(folder_path, filename)
-        curve = load_curve_from_txt_file(file_path)
+        curve = load_float_curve_from_txt_file(file_path)
+        curves.append(curve)
+        filenames.append(filename)
+    
+    return curves, filenames
+
+
+def load_pixelated_curve_from_txt_file(file_path):
+    """
+    Load a curve from a txt file
+    """
+    points = np.loadtxt(file_path, dtype=int)
+    unique_rows, idx = np.unique(points, axis=0, return_index=True)
+    pixelated_curve = unique_rows[np.argsort(idx)]
+    return pixelated_curve
+
+
+def load_pixelated_curves_from_txt_file(folder_path):
+    """
+    Load all curves from a folder containing txt files
+    """
+    curves = []
+    filenames = []
+    filtered_filenames = [item for item in os.listdir(folder_path) if not item.startswith('._')]
+    for filename in filtered_filenames:
+        file_path = os.path.join(folder_path, filename)
+        curve = load_pixelated_curve_from_txt_file(file_path)
         curves.append(curve)
         filenames.append(filename)
     
@@ -61,18 +87,41 @@ def load_curves_from_txt_file(folder_path):
 
 
 
-def plot_results(curve1, curve2):
+def load_pixelated_curve_from_image(image_path, start_point):
+    """
+    Load a curve containded ina a binary image
+    """
+    # get curve from image
+    o_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    treepath = imscc.build_tree(o_image, start_point)                                           
+
+    k = 2
+    branch = []
+    curve_elem = treepath[k]
+    while type(curve_elem) is tuple:
+        branch.append(curve_elem)
+        curve_elem = treepath[k]
+        k += 1
+    
+    bx = np.array([point[1] for point in branch])
+    by = np.array([point[0] for point in branch])
+    pixel_curve = np.column_stack([bx, by])
+    return pixel_curve
+
+
+
+def plot_two_curves(curve1, curve2, label1='Curve 1', label2='Curve 2'):
     """
     Plot the results of the polynomial fitting
     """
-    plt.figure(figsize=(12, 12))
-    plt.plot(curve1[:, 0], curve1[:, 1], 'bo-', alpha=0.3, markersize=2, linewidth=1, label='Original')
-    plt.plot(curve2[:, 0], curve2[:, 1], 'ro-', alpha=0.8, markersize=2, linewidth=1, label='Smoothed')
+    plt.figure(figsize=(18, 12))
+    plt.plot(curve1[:, 0], curve1[:, 1], 'o-', color="darkturquoise", alpha=0.6, markersize=2, linewidth=1, label=label1)
+    plt.plot(curve2[:, 0], curve2[:, 1], 'o-', color="crimson", alpha=0.6, markersize=2, linewidth=1, label=label2)
 
 
     plt.xlabel('X Coordinate')
     plt.ylabel('Y Coordinate')
-    plt.title('Curve Smoothing with Cubic Spline')
+    plt.title('--')
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.axis('equal')

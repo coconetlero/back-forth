@@ -7,6 +7,7 @@ import os
 import time
 
 import utils.Smoothing as smooth
+import utils.load_and_write as lw
 import ImageToSCC as imscc
 import Morphology_Measurements_Single_Curve as measure
 
@@ -147,14 +148,19 @@ def optimize_w_for_input(
 
     for i in range(n_init):
         w_i = Xw[i]
-        u_i, v_i = metrics_fn(x, w_i)
-        J_i = a * u_i + b * v_i
+        Td_i, D_i = metrics_fn(x, w_i)
+        t1 = a * Td_i
+        t2 = b * D_i
+        J_i = a * Td_i + b * D_i
         J_list.append(J_i)
-        u_list.append(u_i)
-        v_list.append(v_i)
+        u_list.append(Td_i)
+        v_list.append(D_i)
+
+        with open("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/Td_i_-_D_i.csv", 'a') as f:            
+            f.write('{:.6f}, {:.6f} \n'.format(Td_i, D_i))
 
         if verbose:
-            print(f"[INIT] {i+1}/{n_init} | u={u_i:.4f}, v={v_i:.4f}, J={J_i:.4f}, w={w_i}")
+            print(f"[INIT] {i+1}/{n_init} | u={Td_i:.4f}, v={D_i:.4f}, J={J_i:.4f}, w={w_i}")
 
     J_arr = np.array(J_list)
     y = -J_arr  # for maximization
@@ -172,7 +178,7 @@ def optimize_w_for_input(
 
         # Evaluate true metrics at (x, w_next)
         u_next, v_next = metrics_fn(x, w_next)
-        J_next = a * u_next + b * v_next
+        J_next = (a * u_next) + (b * v_next)
         y_next = -J_next
 
         # Append
@@ -259,27 +265,6 @@ def get_random_curve(path, image_folder, des_file) -> np.ndarray:
 # ============================
 if __name__ == "__main__":
    
-    # ============================
-    # Plotting helper
-    # ============================
-    def plot_results(curve1, curve2):
-        """
-        Plot the results of the polynomial fitting
-        """
-        plt.figure(figsize=(12, 12))
-        plt.plot(curve1[:, 0], curve1[:, 1], 'bo-', alpha=0.3, markersize=2, linewidth=1, label='Original')
-        plt.plot(curve2[:, 0], curve2[:, 1], 'ro-', alpha=0.8, markersize=2, linewidth=1, label='Smoothed')
-
-
-        plt.xlabel('X Coordinate')
-        plt.ylabel('Y Coordinate')
-        plt.title('Curve Smoothing with Cubic Spline')
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.axis('equal')
-        plt.show()
-
-
 
     def smoothing_metrics(scale_original_curve: dict, w: np.ndarray) -> Tuple[float, float]:
         # x: (2, n)
@@ -316,8 +301,8 @@ if __name__ == "__main__":
                 match1 = re.search(r'(\S+)\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)', line)               
                 if match1:
                     fname = match1.group(1)                    
-                    x = float(match1.group(2))
-                    y = float(match1.group(3))
+                    x = int(match1.group(2))
+                    y = int(match1.group(3))
 
                 match2 = re.search(r'_(\d+)_X(\d+)', fname)
                 if match2:
@@ -329,27 +314,14 @@ if __name__ == "__main__":
                 original_curve *= scale
                 
                 # start position
-                sp = (int(y), int(x))
+                sp = (y, x)
+                pixel_curve = lw.load_pixelated_curve_from_image(os.path.join(path, image_folder, fname), sp)
 
-                # get curve from image
-                o_image = cv2.imread(os.path.join(path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
-                treepath = imscc.build_tree(o_image, sp)                                           
+                # lw.plot_two_curves(original_curve, pixel_curve, label1='Original', label2='Pixelated')
 
-                k = 2
-                branch = []
-                curve_elem = treepath[k]
-                while type(curve_elem) is tuple:
-                    branch.append(curve_elem)
-                    curve_elem = treepath[k]
-                    k += 1
-                
-                bx = np.array([point[0] for point in branch])
-                by = np.array([point[1] for point in branch])
-                pixel_curve = np.column_stack([by, bx])
-                                
-                a = 0.2
-                b = 0.8
-                interations = 30
+                a = 0.5      # Tortuosity distance ponderation
+                b = 0.5      # Curves distance ponderation
+                interations = 50
 
                 # Bounds for w = [w1, w2]
                 lows = np.array([0.1, 0.01], dtype=float)
@@ -378,12 +350,17 @@ if __name__ == "__main__":
                 torts.append(best_u)
                 dists.append(best_v)
                 params.append(best_w)
+                
+                # with open("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/test_output.csv", 'a') as f:
+                #     f.write('{:.4f}, {:.4f}, {:.6f}, {:.6f} \n'.format(best_u, best_v, best_w[0], best_w[1]))
+                    
+                
 
         # for idx in range(len(names)):
         #     # print('{:<4}, {}, {}, {:.4f}, {:.4f}'.format(idx, names[idx], np.array2string(np.array(params[idx]), precision=4), torts[idx], dists[idx]))
         #     print('{:<4}, {:<20}, {:.6f}, {:.6f}, {:.6f}, {:.6f}'.format(idx, names[idx], params[idx][0], params[idx][1], torts[idx], dists[idx]))
 
-        output_filename = ("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/30iter_1500samples.csv")
+        output_filename = ("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/50iter_2500samples_t.csv")
         with open(output_filename, 'w') as f:
             for idx in range(len(names)):
                 f.write('{:<4}, {:<20}, {:.6f}, {:.6f}, {:.6f}, {:.6f} \n'.format(idx, names[idx], params[idx][0], params[idx][1], torts[idx], dists[idx]))
@@ -394,7 +371,7 @@ if __name__ == "__main__":
     start_time = time.perf_counter()
 
     # obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
-    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_200_5_1', "images", "coordinates_curves.txt")
+    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', "images", "coordinates_curves.txt")
 
     end_time = time.perf_counter()
     print(f"Execution time: {end_time - start_time:.6f} seconds") 

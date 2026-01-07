@@ -178,7 +178,8 @@ def arclen_parametrization(px, py, num_points):
         tbins[np.where(np.bitwise_or(tbins <= 0, (N <= 0)))] = 1
         tbins[np.where(np.bitwise_or(tbins >= n, (N >= 1)))] = n - 1
 
-        s = np.divide((N - cumarc[tbins - 1]), chordlen[tbins - 1])
+        s = np.divide((N[1:] - cumarc[(tbins - 1)[1:]]), chordlen[(tbins - 1)[1:]])
+        s = [0, *s]
         pt = pxy[tbins - 1, :] + np.multiply((pxy[tbins, :] - pxy[tbins - 1, :]), (np.vstack([s] * 2)).T)
 
         pt[0] = np.array([px[0], py[0]])
