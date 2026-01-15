@@ -126,3 +126,47 @@ def plot_two_curves(curve1, curve2, label1='Curve 1', label2='Curve 2'):
     plt.grid(True, alpha=0.3)
     plt.axis('equal')
     plt.show()
+
+
+    def display_curve_on_image(image_path, curve):
+    
+        img_bgr = cv2.imread(image_path)
+        if img_bgr is None:
+            raise FileNotFoundError("Could not load image")
+        
+        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        
+        x = curve[:, 0]
+        y = curve[:, 1]
+
+        plt.figure(figsize=(6, 6))
+        plt.imshow(img_rgb)
+        plt.plot(x, y, linewidth=2, color='red', alpha=0.5)   # curve overlay
+        plt.scatter(x, y, s=5, color='yellow', alpha=0.5)     # optional: show sample points
+        plt.axis('off')
+        plt.tight_layout()
+        plt.show()
+
+
+def display_curve_on_image_2(image_path, curve1, curve2):
+    
+    img_bgr = cv2.imread(image_path)
+    if img_bgr is None:
+        raise FileNotFoundError("Could not load image")
+    
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    
+    x = curve1[:, 0]
+    y = curve1[:, 1]
+
+    plt.figure(figsize=(6, 6))
+    plt.imshow(img_rgb)
+    plt.plot(curve2[:, 0], curve2[:, 1], 'o-', color="lawngreen",
+     alpha=0.5, markersize=2, linewidth=1, label="pixel")
+    plt.plot(x, y, linewidth=2, color='red', alpha=0.5)   # curve overlay
+    plt.scatter(x, y, s=5, color='yellow', alpha=0.5)     # optional: show sample points
+    
+
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()
