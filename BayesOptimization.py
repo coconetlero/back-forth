@@ -156,8 +156,8 @@ def optimize_w_for_input(
         u_list.append(Td_i)
         v_list.append(D_i)
 
-        with open("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/Td_i_-_D_i.csv", 'a') as f:            
-            f.write('{:.6f}, {:.6f} \n'.format(Td_i, D_i))
+        # with open("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/Td_i_-_D_i.csv", 'a') as f:            
+        #     f.write('{:.6f}, {:.6f} \n'.format(Td_i, D_i))
 
         if verbose:
             print(f"[INIT] {i+1}/{n_init} | u={Td_i:.4f}, v={D_i:.4f}, J={J_i:.4f}, w={w_i}")
@@ -368,7 +368,7 @@ if __name__ == "__main__":
 
 
 
-    def obtain_best_params_for_all_2(path, pixel_curve_folder, target_curves_folder, des_file):        
+    def obtain_best_params_for_all_2(path, pixel_curve_folder, target_curves_folder):        
         names = []
         torts = []        
         dists = []
@@ -426,7 +426,7 @@ if __name__ == "__main__":
 
     # obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
 
-    obtain_best_params_for_all_2('/Users/zianfanti/IIMAS/images_databases/curves_500_5', "pixel_curves", "target_scaled", "coordinates_curves.txt")
+    obtain_best_params_for_all_2('/Users/zianfanti/IIMAS/images_databases/curves_500_5', "pixel_curves", "target_scaled")
     
     
     # obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', "images", "coordinates_curves.txt")
