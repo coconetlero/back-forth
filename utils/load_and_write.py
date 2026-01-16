@@ -22,7 +22,7 @@ def save_pixelated_curve_set(curves_dir_path, description_filename, image_folder
 
                 o_image = cv2.imread(os.path.join(curves_dir_path, image_folder, fname), cv2.IMREAD_GRAYSCALE)
                 treepath = imscc.build_tree(o_image, sp)   
-
+ 
                 k = 2
                 branch = []                
                 while type(treepath[k]) is tuple:
@@ -40,17 +40,18 @@ def load_float_curve_from_txt_file(file_path):
     """
     Load a curve from a txt file
     """
-    curve = np.loadtxt(file_path, dtype=np.float32)
+    curve = np.loadtxt(file_path, dtype=np.float32, delimiter=',')
     return curve
 
 
-def load_float_curves_from_txt_file(folder_path):
+def load_float_curves_from_txt_files(folder_path):
     """
     Load all curves from a folder containing txt files
     """
     curves = []
     filenames = []
     filtered_filenames = [item for item in os.listdir(folder_path) if not item.startswith('._')]
+    filtered_filenames = sorted(filtered_filenames)
     for filename in filtered_filenames:
         file_path = os.path.join(folder_path, filename)
         curve = load_float_curve_from_txt_file(file_path)
@@ -58,6 +59,7 @@ def load_float_curves_from_txt_file(folder_path):
         filenames.append(filename)
     
     return curves, filenames
+
 
 
 def load_pixelated_curve_from_txt_file(file_path):
@@ -70,13 +72,14 @@ def load_pixelated_curve_from_txt_file(file_path):
     return pixelated_curve
 
 
-def load_pixelated_curves_from_txt_file(folder_path):
+def load_pixelated_curves_from_txt_files(folder_path):
     """
     Load all curves from a folder containing txt files
     """
     curves = []
     filenames = []
     filtered_filenames = [item for item in os.listdir(folder_path) if not item.startswith('._')]
+    filtered_filenames = sorted(filtered_filenames)
     for filename in filtered_filenames:
         file_path = os.path.join(folder_path, filename)
         curve = load_pixelated_curve_from_txt_file(file_path)
@@ -110,7 +113,7 @@ def load_pixelated_curve_from_image(image_path, start_point):
 
 
 
-def plot_two_curves(curve1, curve2, label1='Curve 1', label2='Curve 2'):
+def plot_two_curves(curve1, curve2, plot_title="Curves Comparison", label1='Curve 1', label2='Curve 2'):
     """
     Plot the results of the polynomial fitting
     """
@@ -121,31 +124,33 @@ def plot_two_curves(curve1, curve2, label1='Curve 1', label2='Curve 2'):
 
     plt.xlabel('X Coordinate')
     plt.ylabel('Y Coordinate')
-    plt.title('--')
+    plt.title(plot_title)
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.axis('equal')
     plt.show()
 
 
-    def display_curve_on_image(image_path, curve):
-    
-        img_bgr = cv2.imread(image_path)
-        if img_bgr is None:
-            raise FileNotFoundError("Could not load image")
-        
-        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-        
-        x = curve[:, 0]
-        y = curve[:, 1]
 
-        plt.figure(figsize=(6, 6))
-        plt.imshow(img_rgb)
-        plt.plot(x, y, linewidth=2, color='red', alpha=0.5)   # curve overlay
-        plt.scatter(x, y, s=5, color='yellow', alpha=0.5)     # optional: show sample points
-        plt.axis('off')
-        plt.tight_layout()
-        plt.show()
+def display_curve_on_image(image_path, curve):
+
+    img_bgr = cv2.imread(image_path)
+    if img_bgr is None:
+        raise FileNotFoundError("Could not load image")
+    
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    
+    x = curve[:, 0]
+    y = curve[:, 1]
+
+    plt.figure(figsize=(6, 6))
+    plt.imshow(img_rgb)
+    plt.plot(x, y, linewidth=2, color='red', alpha=0.5)   # curve overlay
+    plt.scatter(x, y, s=5, color='yellow', alpha=0.5)     # optional: show sample points
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+
 
 
 def display_curve_on_image_2(image_path, curve1, curve2):
