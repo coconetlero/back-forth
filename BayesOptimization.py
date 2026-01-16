@@ -368,10 +368,68 @@ if __name__ == "__main__":
 
 
 
+    def obtain_best_params_for_all_2(path, pixel_curve_folder, target_curves_folder, des_file):        
+        names = []
+        torts = []        
+        dists = []
+        params = []
+
+        [pixel_curves, pixel_fnames] = lw.load_pixelated_curves_from_txt_files(os.path.join(path, pixel_curve_folder))
+        [target_curves, target_fnames] = lw.load_float_curves_from_txt_files(os.path.join(path, target_curves_folder))
+
+        for (px_c, tg_c, fname) in zip(pixel_curves, target_curves, pixel_fnames):
+            match = re.search(r'_(\d+)_X(\d+)', fname)
+            if match:
+                scale = float(match.group(2)) / 10.
+
+            a = 0.5      # Tortuosity distance ponderation
+            b = 0.5      # Curves distance ponderation
+            interations = 50
+
+            # Bounds for w = [w1 (amount of points), w2 (smoothing value)]
+            lows = np.array([0.1, 0.01], dtype=float)
+            highs = np.array([1.0, 0.2], dtype=float) 
+            bounds = Bounds(lows=lows, highs=highs) 
+
+            scale_random_curve = {
+                "test": px_c,
+                "original": tg_c,
+                "scale": scale 
+            }
+
+            best_w, best_J, best_u, best_v = optimize_w_for_input(
+                x=scale_random_curve,
+                metrics_fn=smoothing_metrics,
+                a=a,
+                b=b,
+                bounds=bounds,
+                n_init=5,
+                n_iter=interations,
+                n_candidates=500,
+                verbose=False,
+            )
+
+            names.append(fname)
+            torts.append(best_u)
+            dists.append(best_v)
+            params.append(best_w)
+
+
+        output_filename = ("/Users/zianfanti/Trabajo/tree_representation/back-forth/train/50iter_2500samples_t.csv")
+        with open(output_filename, 'w') as f:
+            for idx in range(len(names)):
+                f.write('{:<4}, {:<20}, {:.6f}, {:.6f}, {:.6f}, {:.6f} \n'.format(idx, names[idx], params[idx][0], params[idx][1], torts[idx], dists[idx]))
+
+
+
     start_time = time.perf_counter()
 
     # obtain_best_params_for_all('/Users/zianfanti/IIMAS/images_databases/curves', "images", "coordinates_curves.txt")
-    obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', "images", "coordinates_curves.txt")
+
+    obtain_best_params_for_all_2('/Users/zianfanti/IIMAS/images_databases/curves_500_5', "pixel_curves", "target_scaled", "coordinates_curves.txt")
+    
+    
+    # obtain_best_params_for_all('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', "images", "coordinates_curves.txt")
 
     end_time = time.perf_counter()
     print(f"Execution time: {end_time - start_time:.6f} seconds") 
