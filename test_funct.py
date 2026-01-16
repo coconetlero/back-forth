@@ -663,9 +663,18 @@ def measure_neuron_tree(config_file, image_filename):
 
 
 def test_load_and_write():
-    lw.save_pixelated_curve_set('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', 'coordinates_curves.txt', 'images',
-                                '/Volumes/HOUSE MINI/IMAGENES/curves_500_5/pixel_curves') 
-    lw.load_curves_from_txt_file('/Volumes/HOUSE MINI/IMAGENES/curves_500_5/pixel_curves')
+    # lw.save_pixelated_curve_set('/Volumes/HOUSE MINI/IMAGENES/curves_500_5', 'coordinates_curves.txt', 'images',
+    #                             '/Volumes/HOUSE MINI/IMAGENES/curves_500_5/pixel_curves') 
+    # lw.load_curves_from_txt_file('/Volumes/HOUSE MINI/IMAGENES/curves_500_5/pixel_curves')
+
+    # lw.save_pixelated_curve_set('/Users/zianfanti/IIMAS/images_databases/curves_500_5', 'coordinates_curves.txt', 'images',
+    #                             '/Users/zianfanti/IIMAS/images_databases/curves_500_5/pixel_curves') 
+    
+    [c, filename] = lw.load_pixelated_curves_from_txt_files('/Users/zianfanti/IIMAS/images_databases/curves_500_5/pixel_curves')
+    [cf, filename] = lw.load_float_curves_from_txt_files('/Users/zianfanti/IIMAS/images_databases/curves_500_5/target_scaled')
+
+    for idx, (c1, c2) in enumerate(zip(c,cf)):
+        lw.plot_two_curves(c2,c1, plot_title=filename[idx])
 
 
 
